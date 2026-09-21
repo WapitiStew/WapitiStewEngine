@@ -1,0 +1,383 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OfflineKitManifest.schema.json",
+  "title": "WSE Offline Kit Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kitId",
+    "classification",
+    "createdAt",
+    "target",
+    "wse",
+    "provider",
+    "artifacts",
+    "dependencies",
+    "verification"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "kitId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "classification": {
+      "enum": [
+        "public",
+        "private-internal"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "os",
+        "architecture",
+        "compiler",
+        "toolchainVersion"
+      ],
+      "properties": {
+        "os": {
+          "type": "string",
+          "minLength": 1
+        },
+        "osVersion": {
+          "type": "string"
+        },
+        "architecture": {
+          "enum": [
+            "x86_64",
+            "arm64"
+          ]
+        },
+        "compiler": {
+          "type": "string",
+          "minLength": 1
+        },
+        "toolchainVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sdkVersion": {
+          "type": "string"
+        },
+        "runtimes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "wse": {
+      "$ref": "#/$defs/wseIdentity"
+    },
+    "privateOverlay": {
+      "$ref": "#/$defs/privateIdentity"
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "default",
+        "allowed",
+        "remoteAccessAllowed"
+      ],
+      "properties": {
+        "default": {
+          "const": "package"
+        },
+        "allowed": {
+          "const": [
+            "package"
+          ]
+        },
+        "remoteAccessAllowed": {
+          "const": false
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "version",
+          "license",
+          "artifact"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "license": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifact": {
+            "$ref": "#/$defs/artifact"
+          }
+        }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previousKitId",
+        "procedureDocument"
+      ],
+      "properties": {
+        "previousKitId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "procedureDocument": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "networkDisabled",
+        "configure",
+        "build",
+        "test",
+        "run",
+        "checksum",
+        "remoteAttemptCount"
+      ],
+      "properties": {
+        "networkDisabled": {
+          "const": true
+        },
+        "configure": {
+          "$ref": "#/$defs/result"
+        },
+        "build": {
+          "$ref": "#/$defs/result"
+        },
+        "test": {
+          "$ref": "#/$defs/result"
+        },
+        "run": {
+          "$ref": "#/$defs/result"
+        },
+        "checksum": {
+          "$ref": "#/$defs/result"
+        },
+        "rollback": {
+          "$ref": "#/$defs/result"
+        },
+        "remoteAttemptCount": {
+          "const": 0
+        },
+        "reportArtifact": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "keyId",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keyId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "wseIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commit",
+        "version",
+        "modules",
+        "buildSharedLibs",
+        "tree"
+      ],
+      "properties": {
+        "repository": {
+          "const": "Engine"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{40}$"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{40}$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "buildSharedLibs": {
+          "type": "boolean"
+        }
+      }
+    },
+    "privateIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commit",
+        "version",
+        "requiresWse"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{40}$"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{40}$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiresWse": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "type",
+        "classification",
+        "size",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "source-bundle",
+            "cmake-package",
+            "binary-cache",
+            "download-cache",
+            "system-package",
+            "license",
+            "sbom",
+            "report",
+            "other"
+          ]
+        },
+        "classification": {
+          "enum": [
+            "public",
+            "private-internal"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        }
+      }
+    },
+    "result": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "NOT_RUN",
+        "NOT_APPLICABLE"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "classification": {
+            "const": "private-internal"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "privateOverlay"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "privateOverlay"
+          ]
+        }
+      }
+    }
+  ]
+}

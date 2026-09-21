@@ -1,0 +1,7 @@
+# WSE public-header raw void-pointer debt baseline.
+# Format: relative header path|exact occurrence count|classification
+#
+# This is a ratchet, not an acceptance list. New paths or count increases fail the
+# public-header boundary test. Reductions must update this file and the Phase 7-B
+# migration inventory in the same change.
+# (empty - the public API carries no raw void pointer; new entries are forbidden)

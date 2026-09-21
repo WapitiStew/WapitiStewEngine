@@ -1,0 +1,874 @@
+{
+  "schema_version": 2,
+  "cache_format": "wse-portable-cache-v2",
+  "packages": [
+    {
+      "name": "libjpeg-turbo",
+      "role": "dependency",
+      "version": "3.0.4",
+      "license": "IJG, BSD-3-Clause and Zlib",
+      "license_file": "LICENSE.md",
+      "install_subdir": "vpj/libjpeg-turbo",
+      "linkage": "static",
+      "metadata_file": "wse-dependency.json",
+      "required_files": [
+        "include/turbojpeg.h",
+        "LICENSE.md"
+      ],
+      "url": "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/3.0.4.zip",
+      "archive_name": "3.0.4.zip",
+      "sha256": "0c58853494f31a65329e567569d8614f35a74c1251bdcca10bb3d01689b35035",
+      "config": {
+        "extracted_dir": "libjpeg-turbo-3.0.4-extract",
+        "build_working_dir": "libjpeg-turbo-3.0.4"
+      },
+      "platforms": {
+        "windows": {
+          "required_files": [
+            "lib/turbojpeg.lib",
+            "lib/turbojpegd.lib",
+            "bin/turbojpeg.dll"
+          ],
+          "config": {
+            "build": {
+              "commands": [
+                ["cmake", "-S", ".", "-B", "{build_root}", "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-release"],
+                ["cmake", "--build", "{build_root}", "--config", "Debug"],
+                ["cmake", "--install", "{build_root}", "--config", "Debug", "--prefix", "{extract_root}/install-debug"],
+                ["cmake", "--build", "{build_root}", "--config", "Release"],
+                ["cmake", "--install", "{build_root}", "--config", "Release", "--prefix", "{extract_root}/install-release"]
+              ]
+            },
+            "copy_rules": [
+              { "from": "install-release/include", "to": "include", "type": "dir" },
+              { "from": "install-release/lib", "to": "lib", "type": "dir" },
+              { "from": "install-release/bin", "to": "bin", "type": "dir" },
+              { "from": "install-debug/lib/turbojpeg.lib", "to": "lib/turbojpegd.lib", "type": "file" },
+              { "from": "install-debug/bin/turbojpeg.dll", "to": "bin/turbojpegd.dll", "type": "file" },
+              { "from": "libjpeg-turbo-3.0.4/LICENSE.md", "to": "LICENSE.md", "type": "file" }
+            ]
+          },
+          "architectures": {
+            "x86_64": {}
+          }
+        },
+        "linux": {
+          "install_subdir": "vpj/libjpeg-turbo-linux",
+          "required_files": [
+            "lib/debug/libturbojpeg.a",
+            "lib/release/libturbojpeg.a"
+          ],
+          "config": {
+            "extracted_dir": "libjpeg-turbo-3.0.4-extract-linux",
+            "build": {
+              "commands": [
+                ["cmake", "-S", ".", "-B", "{build_root}/debug", "-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-linux-debug", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DENABLE_SHARED=OFF", "-DENABLE_STATIC=ON", "-DWITH_TURBOJPEG=ON", "-DWITH_SIMD=OFF", "-DWITH_JAVA=OFF"],
+                ["cmake", "--build", "{build_root}/debug", "--parallel", "2"],
+                ["cmake", "--install", "{build_root}/debug"],
+                ["cmake", "-S", ".", "-B", "{build_root}/release", "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-linux-release", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DENABLE_SHARED=OFF", "-DENABLE_STATIC=ON", "-DWITH_TURBOJPEG=ON", "-DWITH_SIMD=OFF", "-DWITH_JAVA=OFF"],
+                ["cmake", "--build", "{build_root}/release", "--parallel", "2"],
+                ["cmake", "--install", "{build_root}/release"]
+              ]
+            },
+            "copy_rules": [
+              { "from": "install-linux-release/include", "to": "include", "type": "dir" },
+              { "from": "install-linux-debug/lib/libturbojpeg.a", "to": "lib/debug/libturbojpeg.a", "type": "file" },
+              { "from": "install-linux-release/lib/libturbojpeg.a", "to": "lib/release/libturbojpeg.a", "type": "file" },
+              { "from": "libjpeg-turbo-3.0.4/LICENSE.md", "to": "LICENSE.md", "type": "file" }
+            ]
+          },
+          "architectures": {
+            "x86_64": {},
+            "arm64": {
+              "install_subdir": "vpj/libjpeg-turbo-arm64",
+              "config": {
+                "extracted_dir": "libjpeg-turbo-3.0.4-extract-linux-arm64",
+                "build": {
+                  "commands": [
+                    ["cmake", "-S", ".", "-B", "{build_root}/debug", "-DCMAKE_TOOLCHAIN_FILE={wse_root}/cmake/toolchains/linux-aarch64-gcc.cmake", "-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-linux-debug", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DENABLE_SHARED=OFF", "-DENABLE_STATIC=ON", "-DWITH_TURBOJPEG=ON", "-DWITH_SIMD=OFF", "-DWITH_JAVA=OFF"],
+                    ["cmake", "--build", "{build_root}/debug", "--parallel", "2"],
+                    ["cmake", "--install", "{build_root}/debug"],
+                    ["cmake", "-S", ".", "-B", "{build_root}/release", "-DCMAKE_TOOLCHAIN_FILE={wse_root}/cmake/toolchains/linux-aarch64-gcc.cmake", "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-linux-release", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DENABLE_SHARED=OFF", "-DENABLE_STATIC=ON", "-DWITH_TURBOJPEG=ON", "-DWITH_SIMD=OFF", "-DWITH_JAVA=OFF"],
+                    ["cmake", "--build", "{build_root}/release", "--parallel", "2"],
+                    ["cmake", "--install", "{build_root}/release"]
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "openssl",
+      "role": "dependency",
+      "default": false,
+      "version": "3.5.8",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE.txt",
+      "install_subdir": "openssl-arm64",
+      "cmake": {
+        "WSE_OPENSSL_ROOT": "{target_dir}"
+      },
+      "linkage": "static",
+      "metadata_file": "wse-dependency.json",
+      "required_files": [
+        "include/openssl/ssl.h",
+        "lib/libssl.a",
+        "lib/libcrypto.a",
+        "LICENSE.txt"
+      ],
+      "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz",
+      "archive_name": "openssl-3.5.8.tar.gz",
+      "sha256": "a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2",
+      "signature": {
+        "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz.asc",
+        "file": "openssl-3.5.8.tar.gz.asc",
+        "signer_fingerprint": "B146647E45A7B33947AB226B2A2C87D161692D40"
+      },
+      "platforms": {
+        "linux": {
+          "system_dependencies": [
+            "Perl, make and the GNU AArch64 cross compiler"
+          ],
+          "config": {
+            "extracted_dir": "openssl-3.5.8-extract-linux-arm64",
+            "build_working_dir": "openssl-3.5.8",
+            "build": {
+              "commands": [
+                ["./Configure", "linux-aarch64", "--cross-compile-prefix=aarch64-linux-gnu-", "--prefix={extract_root}/install-linux-arm64", "--libdir=lib", "no-shared", "no-tests", "no-apps", "no-docs", "no-module", "no-zlib", "-fPIC"],
+                ["make", "-s", "-j2"],
+                ["make", "-s", "install_sw"]
+              ]
+            },
+            "copy_rules": [
+              {
+                "from": "install-linux-arm64/include",
+                "to": "include",
+                "type": "dir"
+              },
+              {
+                "from": "install-linux-arm64/lib",
+                "to": "lib",
+                "type": "dir"
+              },
+              {
+                "from": "openssl-3.5.8/LICENSE.txt",
+                "to": "LICENSE.txt",
+                "type": "file"
+              }
+            ]
+          },
+          "architectures": {
+            "arm64": {}
+          }
+        }
+      }
+    },
+    {
+      "name": "libcurl",
+      "role": "dependency",
+      "version": "8.21.0",
+      "license": "curl",
+      "license_file": "COPYING",
+      "install_subdir": "libcurl",
+      "linkage": "static",
+      "metadata_file": "wse-dependency.json",
+      "required_files": [
+        "include/curl/curl.h",
+        "COPYING"
+      ],
+      "url": "https://curl.se/download/curl-8.21.0.tar.xz",
+      "archive_name": "curl-8.21.0.tar.xz",
+      "sha256": "aa1b66a70eace83dc624508745646c08ae561de512ab403adffb93ac87fc72e6",
+      "signature": {
+        "url": "https://curl.se/download/curl-8.21.0.tar.xz.asc",
+        "file": "curl-8.21.0.tar.xz.asc",
+        "signer_fingerprint": "27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2"
+      },
+      "config": {
+        "extracted_dir": "curl-8.21.0-extract",
+        "build_working_dir": "curl-8.21.0"
+      },
+      "platforms": {
+        "windows": {
+          "system_dependencies": [
+            "Windows SDK Schannel, Crypt32 and Winsock"
+          ],
+          "required_globs": [
+            "lib/release/*curl*.lib",
+            "lib/debug/*curl*.lib"
+          ],
+          "config": {
+            "extracted_dir": "curl-8.21.0-extract-windows",
+            "build": {
+              "commands": [
+                ["cmake", "-S", ".", "-B", "{build_root}/debug", "-G", "Visual Studio 17 2022", "-A", "x64", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-windows-debug", "-DCMAKE_C_FLAGS_DEBUG=/Z7 /Ob0 /Od /RTC1", "-DCMAKE_CXX_FLAGS_DEBUG=/Z7 /Ob0 /Od /RTC1", "-DBUILD_SHARED_LIBS=OFF", "-DBUILD_STATIC_LIBS=ON", "-DBUILD_CURL_EXE=OFF", "-DBUILD_EXAMPLES=OFF", "-DBUILD_LIBCURL_DOCS=OFF", "-DBUILD_MISC_DOCS=OFF", "-DBUILD_TESTING=OFF", "-DCURL_USE_SCHANNEL=ON", "-DCURL_USE_OPENSSL=OFF", "-DCURL_USE_LIBPSL=OFF", "-DCURL_USE_LIBSSH2=OFF", "-DCURL_USE_PKGCONFIG=OFF", "-DCURL_ZLIB=OFF", "-DCURL_BROTLI=OFF", "-DCURL_ZSTD=OFF", "-DUSE_LIBIDN2=OFF", "-DUSE_NGHTTP2=OFF", "-DUSE_WIN32_LDAP=OFF", "-DCURL_DISABLE_LDAP=ON", "-DCURL_DISABLE_LDAPS=ON", "-DCURL_ENABLE_NTLM=OFF", "-DCURL_ENABLE_SMB=OFF", "-DCURL_WERROR=OFF"],
+                ["cmake", "--build", "{build_root}/debug", "--config", "Debug", "--parallel"],
+                ["cmake", "--install", "{build_root}/debug", "--config", "Debug"],
+                ["cmake", "-S", ".", "-B", "{build_root}/release", "-G", "Visual Studio 17 2022", "-A", "x64", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-windows-release", "-DBUILD_SHARED_LIBS=OFF", "-DBUILD_STATIC_LIBS=ON", "-DBUILD_CURL_EXE=OFF", "-DBUILD_EXAMPLES=OFF", "-DBUILD_LIBCURL_DOCS=OFF", "-DBUILD_MISC_DOCS=OFF", "-DBUILD_TESTING=OFF", "-DCURL_USE_SCHANNEL=ON", "-DCURL_USE_OPENSSL=OFF", "-DCURL_USE_LIBPSL=OFF", "-DCURL_USE_LIBSSH2=OFF", "-DCURL_USE_PKGCONFIG=OFF", "-DCURL_ZLIB=OFF", "-DCURL_BROTLI=OFF", "-DCURL_ZSTD=OFF", "-DUSE_LIBIDN2=OFF", "-DUSE_NGHTTP2=OFF", "-DUSE_WIN32_LDAP=OFF", "-DCURL_DISABLE_LDAP=ON", "-DCURL_DISABLE_LDAPS=ON", "-DCURL_ENABLE_NTLM=OFF", "-DCURL_ENABLE_SMB=OFF", "-DCURL_WERROR=OFF"],
+                ["cmake", "--build", "{build_root}/release", "--config", "Release", "--parallel"],
+                ["cmake", "--install", "{build_root}/release", "--config", "Release"]
+              ]
+            },
+            "copy_rules": [
+              {
+                "from": "install-windows-release/include",
+                "to": "include",
+                "type": "dir"
+              },
+              {
+                "from": "install-windows-release/lib",
+                "to": "lib/release",
+                "type": "dir"
+              },
+              {
+                "from": "install-windows-debug/lib",
+                "to": "lib/debug",
+                "type": "dir"
+              },
+              {
+                "from": "curl-8.21.0/COPYING",
+                "to": "COPYING",
+                "type": "file"
+              }
+            ]
+          }
+        },
+        "linux": {
+          "system_dependencies": [
+            "OpenSSL development package (Ubuntu and Raspberry Pi OS: libssl-dev)"
+          ],
+          "required_globs": [
+            "lib/release/*curl*.a",
+            "lib/debug/*curl*.a"
+          ],
+          "config": {
+            "extracted_dir": "curl-8.21.0-extract-linux",
+            "build": {
+              "commands": [
+                ["cmake", "-S", ".", "-B", "{build_root}/debug", "-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-linux-debug", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DBUILD_STATIC_LIBS=ON", "-DBUILD_CURL_EXE=OFF", "-DBUILD_EXAMPLES=OFF", "-DBUILD_LIBCURL_DOCS=OFF", "-DBUILD_MISC_DOCS=OFF", "-DBUILD_TESTING=OFF", "-DCURL_USE_OPENSSL=ON", "-DCURL_USE_LIBPSL=OFF", "-DCURL_USE_LIBSSH2=OFF", "-DCURL_USE_PKGCONFIG=OFF", "-DCURL_ZLIB=OFF", "-DCURL_BROTLI=OFF", "-DCURL_ZSTD=OFF", "-DUSE_LIBIDN2=OFF", "-DUSE_NGHTTP2=OFF", "-DCURL_DISABLE_LDAP=ON", "-DCURL_DISABLE_LDAPS=ON", "-DCURL_ENABLE_NTLM=OFF", "-DCURL_ENABLE_SMB=OFF", "-DCURL_WERROR=OFF"],
+                ["cmake", "--build", "{build_root}/debug", "--parallel"],
+                ["cmake", "--install", "{build_root}/debug"],
+                ["cmake", "-S", ".", "-B", "{build_root}/release", "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-linux-release", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DBUILD_STATIC_LIBS=ON", "-DBUILD_CURL_EXE=OFF", "-DBUILD_EXAMPLES=OFF", "-DBUILD_LIBCURL_DOCS=OFF", "-DBUILD_MISC_DOCS=OFF", "-DBUILD_TESTING=OFF", "-DCURL_USE_OPENSSL=ON", "-DCURL_USE_LIBPSL=OFF", "-DCURL_USE_LIBSSH2=OFF", "-DCURL_USE_PKGCONFIG=OFF", "-DCURL_ZLIB=OFF", "-DCURL_BROTLI=OFF", "-DCURL_ZSTD=OFF", "-DUSE_LIBIDN2=OFF", "-DUSE_NGHTTP2=OFF", "-DCURL_DISABLE_LDAP=ON", "-DCURL_DISABLE_LDAPS=ON", "-DCURL_ENABLE_NTLM=OFF", "-DCURL_ENABLE_SMB=OFF", "-DCURL_WERROR=OFF"],
+                ["cmake", "--build", "{build_root}/release", "--parallel"],
+                ["cmake", "--install", "{build_root}/release"]
+              ]
+            },
+            "copy_rules": [
+              {
+                "from": "install-linux-release/include",
+                "to": "include",
+                "type": "dir"
+              },
+              {
+                "from": "install-linux-release/lib",
+                "to": "lib/release",
+                "type": "dir"
+              },
+              {
+                "from": "install-linux-debug/lib",
+                "to": "lib/debug",
+                "type": "dir"
+              },
+              {
+                "from": "curl-8.21.0/COPYING",
+                "to": "COPYING",
+                "type": "file"
+              }
+            ]
+          },
+          "architectures": {
+            "x86_64": {},
+            "arm64": {
+              "install_subdir": "libcurl-arm64",
+              "cmake": {
+                "WSE_LIBCURL_ROOT": "{target_dir}"
+              },
+              "system_dependencies": [
+                "GNU AArch64 cross compiler and bootstrap-provisioned OpenSSL 3.5.8"
+              ],
+              "config": {
+                "extracted_dir": "curl-8.21.0-extract-linux-arm64",
+                "build": {
+                  "commands": [
+                    ["cmake", "-S", ".", "-B", "{build_root}/debug", "-DCMAKE_TOOLCHAIN_FILE={wse_root}/cmake/toolchains/linux-aarch64-gcc.cmake", "-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-linux-debug", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DBUILD_STATIC_LIBS=ON", "-DBUILD_CURL_EXE=OFF", "-DBUILD_EXAMPLES=OFF", "-DBUILD_LIBCURL_DOCS=OFF", "-DBUILD_MISC_DOCS=OFF", "-DBUILD_TESTING=OFF", "-DCURL_USE_OPENSSL=ON", "-DOPENSSL_USE_STATIC_LIBS=ON", "-DOPENSSL_ROOT_DIR={vendor_root}/openssl-arm64", "-DOPENSSL_INCLUDE_DIR={vendor_root}/openssl-arm64/include", "-DOPENSSL_SSL_LIBRARY={vendor_root}/openssl-arm64/lib/libssl.a", "-DOPENSSL_CRYPTO_LIBRARY={vendor_root}/openssl-arm64/lib/libcrypto.a", "-DCURL_USE_LIBPSL=OFF", "-DCURL_USE_LIBSSH2=OFF", "-DCURL_USE_PKGCONFIG=OFF", "-DCURL_ZLIB=OFF", "-DCURL_BROTLI=OFF", "-DCURL_ZSTD=OFF", "-DUSE_LIBIDN2=OFF", "-DUSE_NGHTTP2=OFF", "-DCURL_DISABLE_LDAP=ON", "-DCURL_DISABLE_LDAPS=ON", "-DCURL_ENABLE_NTLM=OFF", "-DCURL_ENABLE_SMB=OFF", "-DCURL_WERROR=OFF"],
+                    ["cmake", "--build", "{build_root}/debug", "--parallel", "2"],
+                    ["cmake", "--install", "{build_root}/debug"],
+                    ["cmake", "-S", ".", "-B", "{build_root}/release", "-DCMAKE_TOOLCHAIN_FILE={wse_root}/cmake/toolchains/linux-aarch64-gcc.cmake", "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_INSTALL_PREFIX={extract_root}/install-linux-release", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DBUILD_STATIC_LIBS=ON", "-DBUILD_CURL_EXE=OFF", "-DBUILD_EXAMPLES=OFF", "-DBUILD_LIBCURL_DOCS=OFF", "-DBUILD_MISC_DOCS=OFF", "-DBUILD_TESTING=OFF", "-DCURL_USE_OPENSSL=ON", "-DOPENSSL_USE_STATIC_LIBS=ON", "-DOPENSSL_ROOT_DIR={vendor_root}/openssl-arm64", "-DOPENSSL_INCLUDE_DIR={vendor_root}/openssl-arm64/include", "-DOPENSSL_SSL_LIBRARY={vendor_root}/openssl-arm64/lib/libssl.a", "-DOPENSSL_CRYPTO_LIBRARY={vendor_root}/openssl-arm64/lib/libcrypto.a", "-DCURL_USE_LIBPSL=OFF", "-DCURL_USE_LIBSSH2=OFF", "-DCURL_USE_PKGCONFIG=OFF", "-DCURL_ZLIB=OFF", "-DCURL_BROTLI=OFF", "-DCURL_ZSTD=OFF", "-DUSE_LIBIDN2=OFF", "-DUSE_NGHTTP2=OFF", "-DCURL_DISABLE_LDAP=ON", "-DCURL_DISABLE_LDAPS=ON", "-DCURL_ENABLE_NTLM=OFF", "-DCURL_ENABLE_SMB=OFF", "-DCURL_WERROR=OFF"],
+                    ["cmake", "--build", "{build_root}/release", "--parallel", "2"],
+                    ["cmake", "--install", "{build_root}/release"]
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "libcamera",
+      "role": "dependency",
+      "default": false,
+      "version": "0.7.2",
+      "license": "LGPL-2.1-or-later",
+      "license_file": "LICENSES/LGPL-2.1-or-later.txt",
+      "install_subdir": "libcamera",
+      "linkage": "shared",
+      "metadata_file": "wse-dependency.json",
+      "required_files": [
+        "include/libcamera/libcamera/camera.h",
+        "lib/libcamera.so",
+        "lib/libcamera-base.so",
+        "LICENSES/LGPL-2.1-or-later.txt"
+      ],
+      "required_globs": [
+        "lib/libcamera/ipa/ipa_*.so",
+        "libexec/libcamera/*"
+      ],
+      "source": {
+        "type": "git",
+        "url": "https://gitlab.freedesktop.org/camera/libcamera.git",
+        "ref": "v0.7.2",
+        "commit": "191e202178f02430b5942397c70d215cdd2056fa",
+        "recursive": false,
+        "checkout_dir": "libcamera-0.7.2",
+        "bundle": "libcamera-0.7.2.bundle"
+      },
+      "platforms": {
+        "linux": {
+          "system_dependencies": [
+            "Meson >= 1.0.1, Ninja, pkg-config, Python 3 with PyYAML, ply and Jinja2, libyaml development files, libudev development files, and OpenSSL development files"
+          ],
+          "config": {
+            "build_working_dir": ".",
+            "build": {
+              "commands": [
+                ["meson", "setup", "{build_root}/release", ".", "--prefix={extract_root}/install-linux-release", "--libdir=lib", "--buildtype=release", "-Dcpp_link_args=-Wl,-rpath,$ORIGIN", "-Dandroid=disabled", "-Dcam=disabled", "-Ddocumentation=disabled", "-Dgstreamer=disabled", "-Dlc-compliance=disabled", "-Dpycamera=disabled", "-Dqcam=disabled", "-Dtest=false", "-Dtracing=disabled", "-Dudev=enabled", "-Dv4l2=disabled", "-Dpipelines=uvcvideo,simple", "-Dipas=simple"],
+                ["meson", "compile", "-C", "{build_root}/release"],
+                ["meson", "install", "-C", "{build_root}/release"]
+              ]
+            },
+            "copy_rules": [
+              {
+                "from": "install-linux-release",
+                "to": ".",
+                "type": "dir"
+              },
+              {
+                "from": "LICENSES",
+                "to": "LICENSES",
+                "type": "dir"
+              }
+            ]
+          },
+          "architectures": {
+            "x86_64": {}
+          }
+        }
+      }
+    },
+    {
+      "name": "pybind11",
+      "role": "dependency",
+      "default": false,
+      "version": "3.1.0",
+      "license": "BSD-3-Clause",
+      "license_file": "LICENSE",
+      "install_subdir": "pybind11",
+      "linkage": "header-only",
+      "metadata_file": "wse-dependency.json",
+      "required_files": [
+        "CMakeLists.txt",
+        "include/pybind11/pybind11.h",
+        "tools/pybind11Config.cmake.in",
+        "LICENSE"
+      ],
+      "url": "https://files.pythonhosted.org/packages/76/f3/95b0f40b31df41dbfe6bb0857419c9442c15839cbac4796f1c26ae0b6081/pybind11-3.1.0.tar.gz",
+      "archive_name": "pybind11-3.1.0.tar.gz",
+      "sha256": "a1cc06b524ab3edca51f8ad3895f9c4fa20b8b19283173dff4ae781449dc9639",
+      "config": {
+        "extracted_dir": "pybind11-3.1.0-extract",
+        "build_working_dir": "pybind11-3.1.0",
+        "copy_rules": [
+          {
+            "from": "pybind11-3.1.0",
+            "to": ".",
+            "type": "dir"
+          }
+        ]
+      }
+    },
+    {
+      "name": "nlohmann-json",
+      "role": "dependency",
+      "default": false,
+      "version": "3.12.0",
+      "license": "MIT",
+      "license_file": "LICENSE.MIT",
+      "install_subdir": "nlohmann-json",
+      "linkage": "header-only",
+      "metadata_file": "wse-dependency.json",
+      "required_files": [
+        "CMakeLists.txt",
+        "single_include/nlohmann/json.hpp",
+        "LICENSE.MIT"
+      ],
+      "url": "https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz",
+      "archive_name": "nlohmann-json-3.12.0.tar.xz",
+      "sha256": "42f6e95cad6ec532fd372391373363b62a14af6d771056dbfc86160e6dfff7aa",
+      "config": {
+        "extracted_dir": "nlohmann-json-3.12.0-extract",
+        "build_working_dir": "json",
+        "copy_rules": [
+          {
+            "from": "json",
+            "to": ".",
+            "type": "dir"
+          }
+        ]
+      }
+    },
+    {
+      "name": "node-api-headers",
+      "role": "dependency",
+      "default": false,
+      "version": "24.19.0",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "install_subdir": "node-api",
+      "linkage": "header-only",
+      "metadata_file": "wse-dependency.json",
+      "required_files": [
+        "include/node_api.h",
+        "include/node_api_types.h",
+        "include/js_native_api.h",
+        "include/js_native_api_types.h",
+        "LICENSE"
+      ],
+      "url": "https://nodejs.org/download/release/v24.19.0/node-v24.19.0-headers.tar.gz",
+      "archive_name": "node-v24.19.0-headers.tar.gz",
+      "sha256": "54f14a297d47ea0794fe272363703d9dc419c96ac68f20d890f98b63754a3e4c",
+      "supplemental_files": [
+        {
+          "url": "https://raw.githubusercontent.com/nodejs/node/v24.19.0/LICENSE",
+          "file": "node-v24.19.0-LICENSE",
+          "sha256": "148eacf7863ef4329224a29398623077200a27194aa075569faf4a0a85566ca5",
+          "target": "LICENSE"
+        }
+      ],
+      "config": {
+        "extracted_dir": "node-v24.19.0-headers-extract",
+        "build_working_dir": "node-v24.19.0",
+        "copy_rules": [
+          {
+            "from": "node-v24.19.0/include/node",
+            "to": "include",
+            "type": "dir"
+          }
+        ]
+      }
+    }
+  ],
+    "toolchains": [
+    {
+      "name": "nodejs",
+      "role": "verification-tool",
+      "version": "24.19.0",
+      "license": "MIT",
+      "summary": "Node.js runtime that runs the JavaScript binding tests and samples",
+      "install_subdir": "nodejs",
+      "cmake": {
+        "WSE_NODE_EXECUTABLE": "{executable}"
+      },
+      "detect": {
+        "environment_roots": [
+          "WSE_NODE_HOME"
+        ],
+        "executable": "node",
+        "executable_alternatives": [
+          "nodejs"
+        ],
+        "executable_subpath": "node.exe",
+        "version_arguments": [
+          "--version"
+        ],
+        "version_pattern": "v?(\\d+)\\.",
+        "minimum_major": 18
+      },
+      "install_hint": "Install Node.js 18 or newer, for example `winget install OpenJS.NodeJS.LTS`.",
+      "platforms": {
+        "windows": {
+          "architectures": {
+            "x86_64": {
+              "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-win-x64.zip",
+              "archive_name": "node-v24.19.0-win-x64.zip",
+              "sha256": "57f71ab3652e797d84acddc79c81cc9ff1c6ddb2a1974cdb83f00fee9bff4c73",
+              "extracted_root": "node-v24.19.0-win-x64",
+              "required_files": [
+                "node.exe"
+              ]
+            },
+            "arm64": {
+              "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-win-arm64.zip",
+              "archive_name": "node-v24.19.0-win-arm64.zip",
+              "sha256": "8502f4a50b458d4cc38ed8f2001556c2cd239d464920f74017926ccb1e1c157f",
+              "extracted_root": "node-v24.19.0-win-arm64",
+              "required_files": [
+                "node.exe"
+              ]
+            }
+          }
+        },
+        "linux": {
+          "architectures": {
+            "x86_64": {
+              "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-x64.tar.xz",
+              "archive_name": "node-v24.19.0-linux-x64.tar.xz",
+              "sha256": "14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647",
+              "extracted_root": "node-v24.19.0-linux-x64",
+              "required_files": [
+                "bin/node"
+              ]
+            },
+            "arm64": {
+              "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-arm64.tar.xz",
+              "archive_name": "node-v24.19.0-linux-arm64.tar.xz",
+              "sha256": "01443c1e1a29e531ccad5a46fefa6df490d2189c49f7955904aecdbb0fe86fdc",
+              "extracted_root": "node-v24.19.0-linux-arm64",
+              "required_files": [
+                "bin/node"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "temurin-jdk",
+      "role": "verification-tool",
+      "version": "21.0.12.1+1",
+      "license": "GPL-2.0-with-classpath-exception",
+      "summary": "Eclipse Temurin JDK that builds and runs the Java binding tests",
+      "install_subdir": "temurin-jdk",
+      "cmake": {
+        "WSE_JAVA_HOME": "{root}"
+      },
+      "detect": {
+        "environment_roots": [
+          "WSE_JAVA_HOME",
+          "JAVA_HOME"
+        ],
+        "executable": "javac",
+        "executable_subpath": "bin/javac.exe",
+        "version_arguments": [
+          "--version"
+        ],
+        "version_pattern": "javac (\\d+)",
+        "minimum_major": 17
+      },
+      "install_hint": "Install a JDK 17 or newer, for example `winget install EclipseAdoptium.Temurin.21.JDK`.",
+      "platforms": {
+        "windows": {
+          "architectures": {
+            "x86_64": {
+              "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip",
+              "archive_name": "OpenJDK21U-jdk_x64_windows_hotspot_21.0.12.1_1.zip",
+              "sha256": "f9d6e191ab098c0d416e7d588a24420a8621cd2f4720dab2459b8b7b2d2d8b4e",
+              "extracted_root": "jdk-21.0.12.1+1",
+              "required_files": [
+                "bin/javac.exe",
+                "bin/java.exe",
+                "bin/jar.exe"
+              ]
+            },
+            "arm64": {
+              "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_aarch64_windows_hotspot_21.0.12.1_1.zip",
+              "archive_name": "OpenJDK21U-jdk_aarch64_windows_hotspot_21.0.12.1_1.zip",
+              "sha256": "ccf2e51f527d542a70ba5794a600d3aac04b4e967950e227834c7566cb1bec7b",
+              "extracted_root": "jdk-21.0.12.1+1",
+              "required_files": [
+                "bin/javac.exe",
+                "bin/java.exe",
+                "bin/jar.exe"
+              ]
+            }
+          }
+        },
+        "linux": {
+          "architectures": {
+            "x86_64": {
+              "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_x64_linux_hotspot_21.0.12.1_1.tar.gz",
+              "archive_name": "OpenJDK21U-jdk_x64_linux_hotspot_21.0.12.1_1.tar.gz",
+              "sha256": "ce79869e1307ed8ee1e2baa86a412b1eb5b75d10a01006d788a6f968bcfaee94",
+              "extracted_root": "jdk-21.0.12.1+1",
+              "required_files": [
+                "bin/javac",
+                "bin/java",
+                "bin/jar"
+              ]
+            },
+            "arm64": {
+              "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.12.1_1.tar.gz",
+              "archive_name": "OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.12.1_1.tar.gz",
+              "sha256": "23e37e026f12f3e706f18938ff611db3032d075b09d0879a25d06718c773e223",
+              "extracted_root": "jdk-21.0.12.1+1",
+              "required_files": [
+                "bin/javac",
+                "bin/java",
+                "bin/jar"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "cpython",
+      "role": "verification-tool",
+      "version": "3.13.15",
+      "license": "PSF-2.0",
+      "summary": "CPython interpreter with development headers used to build the Python binding",
+      "install_subdir": "cpython",
+      "cmake": {
+        "WSE_PYTHON_EXECUTABLE": "{executable}"
+      },
+      "detect": {
+        "environment_roots": [
+          "WSE_PYTHON_HOME"
+        ],
+        "executable": "python",
+        "executable_alternatives": [
+          "python3"
+        ],
+        "executable_subpath": "python.exe",
+        "version_arguments": [
+          "--version"
+        ],
+        "version_pattern": "Python (\\d+)\\.(\\d+)",
+        "minimum_major": 3,
+        "minimum_minor": 11,
+        "include_running_python": true
+      },
+      "install_hint": "Install CPython 3.11 or newer with the development headers, for example `winget install Python.Python.3.13`, or `apt install python3-dev` on Debian and Ubuntu.",
+      "platforms": {
+        "windows": {
+          "architectures": {
+            "x86_64": {
+              "url": "https://api.nuget.org/v3-flatcontainer/python/3.13.15/python.3.13.15.nupkg",
+              "archive_name": "python.3.13.15.nupkg",
+              "sha512": "0ad3164e412912412d89ee9e8a9d8292893427812a67b9e43d8ef6766871faa7f10dc15899e3691c14e0336fd79da3d39eaa843eac1e3e056a9151ad336bac04",
+              "extracted_root": "tools",
+              "required_files": [
+                "python.exe",
+                "include/Python.h",
+                "libs/python313.lib"
+              ]
+            },
+            "arm64": {
+              "url": "https://api.nuget.org/v3-flatcontainer/pythonarm64/3.13.15/pythonarm64.3.13.15.nupkg",
+              "archive_name": "pythonarm64.3.13.15.nupkg",
+              "sha512": "32163c6a3b72a5d46732f7ea87c6202225200b5330552feeb321b7d8ec098bd4df9612f8588b294a1d40620af2506d8ac65d92026f8e7ffd28e90d2f3829af97",
+              "extracted_root": "tools",
+              "required_files": [
+                "python.exe",
+                "include/Python.h",
+                "libs/python313.lib"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "dotnet-sdk",
+      "role": "verification-tool",
+      "version": "8.0.424",
+      "license": "MIT",
+      "summary": ".NET SDK that builds the C# binding assembly",
+      "install_subdir": "dotnet-sdk",
+      "cmake": {
+        "WSE_DOTNET_EXECUTABLE": "{executable}"
+      },
+      "detect": {
+        "environment_roots": [
+          "WSE_DOTNET_ROOT",
+          "DOTNET_ROOT"
+        ],
+        "executable": "dotnet",
+        "executable_subpath": "dotnet.exe",
+        "version_arguments": [
+          "--list-sdks"
+        ],
+        "version_pattern": "(\\d+)\\.(\\d+)\\.\\d+",
+        "minimum_major": 8,
+        "version_selects_maximum": true
+      },
+      "install_hint": "Install the .NET 8 SDK or newer, for example `winget install Microsoft.DotNet.SDK.8`.",
+      "platforms": {
+        "windows": {
+          "architectures": {
+            "x86_64": {
+              "url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.424/dotnet-sdk-8.0.424-win-x64.zip",
+              "archive_name": "dotnet-sdk-8.0.424-win-x64.zip",
+              "sha512": "1787ab90635c2950672ed7c6507b000e1b212ea7d9a22fcef37061344d37c64d4c4eda12b8742601eff5b45c8736485b31c55613892f240c300190e4e88a58b0",
+              "required_files": [
+                "dotnet.exe",
+                "sdk/8.0.424/dotnet.dll"
+              ]
+            },
+            "arm64": {
+              "url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.424/dotnet-sdk-8.0.424-win-arm64.zip",
+              "archive_name": "dotnet-sdk-8.0.424-win-arm64.zip",
+              "sha512": "fcabd5dfd8587610fce8619827f54ff4d4e8f64b30c161e56e3597e391126621ff1888d83bbfca121b02dab7cc2d9dac68a49b06045320e5a88b5c5ff7bb5eb9",
+              "required_files": [
+                "dotnet.exe",
+                "sdk/8.0.424/dotnet.dll"
+              ]
+            }
+          }
+        },
+        "linux": {
+          "architectures": {
+            "x86_64": {
+              "url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.424/dotnet-sdk-8.0.424-linux-x64.tar.gz",
+              "archive_name": "dotnet-sdk-8.0.424-linux-x64.tar.gz",
+              "sha512": "6503fd9f464d5e3a4f43a881d2b74afc6a2c46ceda74d027f1565b7239f4b3ec884857c03c0dcd49eb52f384d5ae1fa5aaf135f0a6aabc5518103aceed643c74",
+              "required_files": [
+                "dotnet",
+                "sdk/8.0.424/dotnet.dll"
+              ]
+            },
+            "arm64": {
+              "url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.424/dotnet-sdk-8.0.424-linux-arm64.tar.gz",
+              "archive_name": "dotnet-sdk-8.0.424-linux-arm64.tar.gz",
+              "sha512": "bb19b6779ad93d146055583d644ef269bb42501f6c7fdef51e14026cde9d5fd726d370de098a8d8504867fb24bfcb5ab88cc22bec812461aede334de1aacf7b6",
+              "required_files": [
+                "dotnet",
+                "sdk/8.0.424/dotnet.dll"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+    "language_profiles": {
+      "cpp": {
+        "summary": "C++ public headers only",
+        "packages": [],
+        "toolchains": [],
+        "cmake": {}
+      },
+      "cs": {
+        "summary": "C# binding over the flat C ABI",
+        "packages": [],
+        "toolchains": [
+          "dotnet-sdk"
+        ],
+        "cmake": {
+          "WSE_BUILD_DOTNET_BINDING": "ON"
+        }
+      },
+      "java": {
+        "summary": "Java JNI binding",
+        "packages": [],
+        "toolchains": [
+          "temurin-jdk"
+        ],
+        "cmake": {
+          "WSE_BUILD_JAVA_BINDING": "ON"
+        }
+      },
+      "js": {
+        "summary": "Node-API JavaScript binding",
+        "packages": [
+          "node-api-headers"
+        ],
+        "toolchains": [
+          "nodejs"
+        ],
+        "cmake": {
+          "WSE_BUILD_NODE_BINDING": "ON"
+        }
+      },
+      "python": {
+        "summary": "pybind11 Python binding",
+        "packages": [
+          "pybind11"
+        ],
+        "toolchains": [
+          "cpython"
+        ],
+        "cmake": {
+          "WSE_BUILD_PYTHON_BINDING": "ON"
+        }
+      }
+    },
+    "component_profiles": {
+      "xpt": {
+        "packages": [
+          "libcurl"
+        ],
+        "packages_by_target": {
+          "linux/arm64": [
+            "openssl"
+          ]
+        },
+        "implies": [],
+        "cmake": {
+          "WSE_BUILD_XPT": "ON"
+        }
+      },
+      "gef": {
+        "packages": [],
+        "implies": [],
+        "cmake": {
+          "WSE_BUILD_GEF": "ON"
+        }
+      },
+      "iui": {
+        "packages": [],
+        "implies": [],
+        "cmake": {
+          "WSE_BUILD_IUI": "ON"
+        }
+      },
+      "oui": {
+        "packages": [],
+        "implies": [],
+        "cmake": {
+          "WSE_BUILD_OUI": "ON"
+        }
+      },
+      "tmr": {
+        "packages": [],
+        "implies": [],
+        "cmake": {
+          "WSE_BUILD_TMR": "ON"
+        }
+      },
+      "vpj": {
+        "packages": [
+          "nlohmann-json"
+        ],
+        "implies": [
+          "xpt"
+        ],
+        "cmake": {
+          "WSE_BUILD_VPJ": "ON"
+        }
+      },
+      "vpj-video": {
+        "packages": [
+          "libjpeg-turbo"
+        ],
+        "implies": [
+          "vpj"
+        ],
+        "cmake": {
+          "WSE_BUILD_VPJ_VIDEO": "ON"
+        }
+      }
+    }
+}

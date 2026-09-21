@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "generator": "wse-profile-runner",
+  "project_root": "..",
+  "run_entry": "RunDoxygen.py",
+  "default_profile": "developer-public",
+  "profiles": {
+    "user-public": "profiles/user-public.json",
+    "developer-public": "profiles/developer-public.json"
+  },
+  "languages": [
+    "ja",
+    "en"
+  ],
+  "common_resources": {
+    "base_doxyfile": "Resource/Doxyfile",
+    "layout": "Resource/layout.xml",
+    "translation": "Resource/transrate.csv",
+    "style": "Style"
+  }
+}

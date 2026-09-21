@@ -1,0 +1,288 @@
+# The pull-request gate: every Core configuration the SDK promises, on both platforms, straight
+# from a clean checkout, followed by the installed-package boundary verification and an external
+# consumer build. Core-only presets resolve no vendor dependency, so no bootstrap step and no
+# network access happen here — that separation is a build rule (see AGENTS.md), not an
+# optimization. The CTest suite these jobs run already carries the public-API-policy, header-
+# boundary, deprecation-ledger, and documentation gates, which is what makes this workflow a
+# correctness gate rather than only a compile check.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-msvc-core:
+    name: windows msvc core (${{ matrix.library }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        library: [shared, static]
+    steps:
+      - uses: actions/checkout@v4
+
+      # The bootstrap launcher contract provisions the pinned CPython runtime on a machine
+      # without one; caching it keeps that single download from repeating every run.
+      - name: Cache the pinned bootstrap toolchain
+        uses: actions/cache@v4
+        with:
+          path: .bootstrap-cache
+          key: bootstrap-cpython-${{ runner.os }}-${{ hashFiles('bootstrap-manifest.json') }}
+
+      - name: Configure
+        run: cmake --preset windows-msvc-${{ matrix.library }}-core
+
+      - name: Build
+        run: cmake --build build/windows-msvc-${{ matrix.library }}-core --config Release --parallel
+
+      - name: Test
+        run: >-
+          ctest --test-dir build/windows-msvc-${{ matrix.library }}-core
+          -C Release --output-on-failure --output-junit ctest-junit.xml
+
+      # The JUnit report ties a commit SHA to its verification result even after the runner is gone.
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctest-windows-msvc-${{ matrix.library }}-core
+          path: build/windows-msvc-${{ matrix.library }}-core/ctest-junit.xml
+          if-no-files-found: ignore
+
+      # Everything below verifies the installed package at the public distribution boundary:
+      # the manifest matches the built shape, no private device identity leaks, and an external
+      # project can find_package the result through the modern WSE::* component targets.
+      - name: Install package
+        run: >-
+          cmake --install build/windows-msvc-${{ matrix.library }}-core
+          --config Release --prefix "${{ github.workspace }}/wse-package"
+
+      - name: Verify the public package boundary
+        run: python test/package/verify_public_package.py --package-root "${{ github.workspace }}/wse-package"
+
+      - name: Build the external consumer against the package
+        run: >-
+          cmake -S test/consumer -B build-consumer
+          -DWSE_PACKAGE_ROOT="${{ github.workspace }}/wse-package"
+          -DWSE_EXPECT_CORE_ONLY=ON
+          && cmake --build build-consumer --config Release --parallel
+
+      - name: Run the external consumers
+        run: |
+          ./build-consumer/Release/wse_modern_target_consumer.exe
+
+  linux-core:
+    name: linux ${{ matrix.compiler }} core (${{ matrix.library }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        library: [shared, static]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset linux-${{ matrix.compiler }}-${{ matrix.library }}-core
+
+      - name: Build
+        run: cmake --build build/linux-${{ matrix.compiler }}-${{ matrix.library }}-core --parallel "$(nproc)"
+
+      - name: Test
+        run: >-
+          ctest --test-dir build/linux-${{ matrix.compiler }}-${{ matrix.library }}-core
+          --output-on-failure --output-junit ctest-junit.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctest-linux-${{ matrix.compiler }}-${{ matrix.library }}-core
+          path: build/linux-${{ matrix.compiler }}-${{ matrix.library }}-core/ctest-junit.xml
+          if-no-files-found: ignore
+
+      # Everything below verifies the installed package at the public distribution boundary:
+      # the manifest matches the built shape, no private device identity leaks, and an external
+      # project can find_package the result through the modern WSE::* component targets.
+      - name: Install package
+        run: >-
+          cmake --install build/linux-${{ matrix.compiler }}-${{ matrix.library }}-core
+          --prefix "${{ github.workspace }}/wse-package"
+
+      - name: Verify the public package boundary
+        run: python3 test/package/verify_public_package.py --package-root "${{ github.workspace }}/wse-package"
+
+      - name: Build the external consumer against the package
+        run: >-
+          cmake -S test/consumer -B build-consumer
+          -DWSE_PACKAGE_ROOT="${{ github.workspace }}/wse-package"
+          -DWSE_EXPECT_CORE_ONLY=ON
+          && cmake --build build-consumer --parallel "$(nproc)"
+
+      - name: Run the external consumers
+        run: |
+          ./build-consumer/wse_modern_target_consumer
+
+  # The memory-safety gate: the whole Core CTest suite under AddressSanitizer (which carries
+  # LeakSanitizer on Linux) and UndefinedBehaviorSanitizer, with recovery disabled so any finding
+  # aborts the test. ThreadSanitizer needs its own job when the concurrent components (camera,
+  # timer, transport) join CI, because it cannot be combined with ASan in one binary.
+  linux-clang-sanitize:
+    name: linux clang core (asan+ubsan)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset linux-clang-asan-core
+
+      - name: Build
+        run: cmake --build build/linux-clang-asan-core --parallel "$(nproc)"
+
+      - name: Test
+        run: >-
+          ctest --test-dir build/linux-clang-asan-core
+          --output-on-failure --output-junit ctest-junit.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctest-linux-clang-asan-core
+          path: build/linux-clang-asan-core/ctest-junit.xml
+          if-no-files-found: ignore
+
+  # Core's GCC sweep is warning-clean. Keep the empty baseline and promote compiler warnings
+  # to errors so diagnostics that a log parser cannot recognize still fail the build.
+  linux-warning-ratchet:
+    name: linux gcc warning ratchet
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure with the strict warning sweep
+        run: >-
+          cmake --preset linux-gcc-shared-core
+          -DWSE_WARNINGS_AS_ERRORS=ON -DWSE_BUILD_TESTING=OFF
+
+      - name: Build capturing warnings
+        run: |
+          set -o pipefail
+          cmake --build build/linux-gcc-shared-core --parallel "$(nproc)" 2>&1 | tee warn.log
+
+      - name: Enforce the ratchet
+        run: >-
+          python3 tools/ci/check_warning_ratchet.py --log warn.log
+          --baseline test/baseline/warning_baseline_linux_gcc.tsv --source-root .
+
+  windows-warning-ratchet:
+    name: windows msvc warning ratchet
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure with the strict warning sweep
+        run: >-
+          cmake --preset windows-msvc-shared-core
+          -DWSE_WARNING_SWEEP=ON -DWSE_BUILD_TESTING=OFF
+      - name: Build capturing warnings
+        shell: pwsh
+        run: |
+          cmake --build build/windows-msvc-shared-core --config Debug --parallel 4 2>&1 | Tee-Object warn.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Enforce the reviewed Windows baseline
+        run: >-
+          python tools/ci/check_warning_ratchet.py --log warn.log
+          --baseline test/baseline/warning_baseline_windows_msvc.tsv --source-root .
+
+  documentation-doxygen:
+    name: Doxygen ${{ matrix.audience }} English and Japanese
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        audience: [user, developer]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Provision pinned Doxygen and Graphviz
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+          curl --fail --location --retry 3 --output /tmp/doxygen.tar.gz \
+            https://github.com/doxygen/doxygen/releases/download/Release_1_13_2/doxygen-1.13.2.linux.bin.tar.gz
+          echo "f2c0a349403bc5b5ade3f501301e32b49ea31b3182666954bc398452fbc0dd1c  /tmp/doxygen.tar.gz" | sha256sum --check
+          tar -xzf /tmp/doxygen.tar.gz -C /tmp
+          echo "/tmp/doxygen-1.13.2/bin" >> "$GITHUB_PATH"
+      - name: Generate both languages with no warnings
+        run: python3 doxy/RunDoxygen.py --preset ${{ matrix.audience }}-public
+      - name: Upload documentation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-${{ matrix.audience }}-warnings
+          path: doxy/generated/${{ matrix.audience }}-public/full/lang_*/*.log
+
+  # The stress gate runs the failure-injection and lifecycle-soak tests that need the components
+  # off by default in the core gate: the WARP renderer soak (Windows D3D12) and the XPT failure
+  # injection. Core lifecycle soak already rides the core gates. Device-bound stress is a
+  # hardware-phase item.
+  windows-stress:
+    name: windows stress (oui + xpt)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache the pinned bootstrap toolchain
+        uses: actions/cache@v4
+        with:
+          path: .bootstrap-cache
+          key: bootstrap-cpython-${{ runner.os }}-${{ hashFiles('bootstrap-manifest.json') }}
+
+      - name: Bootstrap the pinned libcurl
+        run: python bootstrap.py --package libcurl
+
+      - name: Configure Core, OUI, and XPT
+        run: >-
+          cmake --preset windows-msvc-shared-oui -DWSE_BUILD_XPT=ON
+
+      - name: Build the stress tests
+        run: >-
+          cmake --build build/windows-msvc-shared-oui --config Release --parallel
+          --target wse.stress.core_lifecycle wse.stress.oui_renderer wse.stress.xpt_failure_injection
+
+      - name: Run the stress tests
+        run: >-
+          ctest --test-dir build/windows-msvc-shared-oui -C Release -L stress --output-on-failure
+
+  # Benchmarks measure rather than verify: the job records each commit's numbers as an artifact
+  # for same-runner comparison and never fails on a value. Regression thresholds (PERF plan:
+  # p50/p95 +10%, throughput -10%, warm memory +5%) apply between artifacts of the same runner.
+  linux-benchmarks:
+    name: linux gcc benchmarks (informational)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure with benchmarks
+        run: cmake --preset linux-gcc-shared-core -DWSE_BUILD_BENCHMARKS=ON
+
+      - name: Build
+        run: cmake --build build/linux-gcc-shared-core --parallel "$(nproc)"
+
+      - name: Measure
+        run: |
+          ctest --test-dir build/linux-gcc-shared-core -L benchmark -V | tee bench.log
+          grep "WSE_BENCH" bench.log | sed 's/^[0-9]*: //' > bench-linux-gcc-core.tsv
+          test -s bench-linux-gcc-core.tsv
+
+      - name: Upload measurements
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-linux-gcc-core
+          path: bench-linux-gcc-core.tsv

@@ -1,0 +1,13 @@
+WSE_BENCH	core.matrix.multiply_64	30	p50_ns=512800	p95_ns=752400	mean_ns=524973	ops_per_s=1904.9
+WSE_BENCH	core.matrix.inverse_48	30	p50_ns=148300	p95_ns=312500	mean_ns=205810	ops_per_s=4858.9
+WSE_BENCH	core.image.reduce_3c64_to_3c08_640x480	20	p50_ns=1013800	p95_ns=1481000	mean_ns=1060485	bytes_per_s=7821327034
+WSE_BENCH	core.image.enlarge_3c08_to_3c16_640x480	20	p50_ns=1419100	p95_ns=2239200	mean_ns=1499350	bytes_per_s=1843999066
+WSE_BENCH	core.map.copy_1MiB	50	p50_ns=251700	p95_ns=362500	mean_ns=267566	bytes_per_s=3918943364
+WSE_BENCH	core.log.single_line	200	p50_ns=0	p95_ns=100	mean_ns=47	ops_per_s=21276595.7
+WSE_BENCH	xpt.tcp.rtt_64B	300	p50_ns=28600	p95_ns=60900	mean_ns=34610	ops_per_s=28893.4
+WSE_BENCH	xpt.tcp.echo_throughput_256KiB	30	p50_ns=172600	p95_ns=216000	mean_ns=176620	bytes_per_s=2968452044
+WSE_BENCH	xpt.udp.send_1200B	500	p50_ns=12400	p95_ns=21800	mean_ns=13499	bytes_per_s=88898108
+WSE_BENCH	xpt.cancellation.request_to_observe	2000	p50_ns=100	p95_ns=100	mean_ns=73	ops_per_s=13755158.2
+WSE_BENCH	xpt.retry.single_decision	5000	p50_ns=0	p95_ns=100	mean_ns=18	ops_per_s=54704595.2
+WSE_BENCH	tmr.frame.from_image_3c08_640x480	50	p50_ns=442200	p95_ns=488800	mean_ns=450200	bytes_per_s=2047090182
+WSE_BENCH	tmr.frame.to_image_3c08_640x480	50	p50_ns=230700	p95_ns=345900	mean_ns=247530	bytes_per_s=3723185068

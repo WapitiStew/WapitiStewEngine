@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>BindingContract</AssemblyName>
+    <RootNamespace>BindingContract</RootNamespace>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="BindingContract.cs" />
+    <Compile Include="CapiContract.cs" />
+    <Compile Include="OwnershipContract.cs" />
+    <Compile Include="TransferContract.cs" />
+  </ItemGroup>
+
+  <!-- An extension overlay brings the assertions for the components it provides. They stay on a
+       separately reviewable path, and this adds nothing without an overlay. -->
+  <ItemGroup Condition="'$(WseExtensionDir)' != ''">
+    <Compile Include="$(WseExtensionDir)/test/binding/cs/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../lang/cs/Wse/Wse.csproj" />
+  </ItemGroup>
+
+</Project>

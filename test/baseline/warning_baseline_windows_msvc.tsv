@@ -1,0 +1,9 @@
+# Per-file warning counts under the strict sweep (see WSE_WARNING_SWEEP).
+# A count may only decrease; regenerating this file is a reviewed action.
+# file<TAB>count
+api/wse/binding/Cancellation.h	4
+api/wse/binding/Error.h	2
+api/wse/binding/FrameBuffer.h	2
+api/wse/binding/Runtime.h	1
+api/wse/error/CoreError.h	18
+api/wse/error/LicenseError.h	7

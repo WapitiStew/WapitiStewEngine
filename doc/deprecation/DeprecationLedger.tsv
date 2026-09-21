@@ -1,0 +1,4 @@
+# WSE public deprecation and migration-debt ledger.
+# schema_version=1
+# Removed entries move to RemovedApiLedger.tsv; this file holds only surfaces that still exist.
+# id|kind|component|public_header|count|surface|replacement|removal_earliest|ja_migration|en_migration|removal_gate

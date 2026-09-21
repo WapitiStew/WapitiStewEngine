@@ -1,0 +1,120 @@
+# @file WonderStewEngineConfig.cmake（configure_fileがWonderStewEngineConfig.cmake.inから生成）
+# @brief Installed WSE Targetと互換Target `WonderStewEngine` を定義する。
+# @details Bootstrapが`engine/wse`をstandalone Buildして`host/engine/wse/`へinstallした
+#          成果物を、HOSTがsource Buildなしで消費するための定義である。
+#          Include解決は既存HOST sourceの2形式を両方通すため、2 Directoryを公開する。
+#            - include/            → `<wse/api/xpt/stew.h>` 形式
+#            - include/wse/api/    → `<tmr/device/WebCamera.h>` 形式
+#          headerの実体は`include/wse/api/`の1か所だけであり、二重配置はしない。
+#          存在検査とtoolset照合は消費側（host/cmake/WonderStewEngine.cmake）が担う。
+
+get_filename_component(WSE_PACKAGE_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+
+set(WSE_PACKAGE_VERSION "@WSE_VERSION@")
+set(WSE_PACKAGE_LIBRARY_TYPE "@WSE_LIBRARY_TYPE@")
+set(WSE_PACKAGE_HAS_XPT @WSE_PACKAGE_BUILD_XPT@)
+set(WSE_PACKAGE_HAS_GEF @WSE_PACKAGE_BUILD_GEF@)
+set(WSE_PACKAGE_HAS_IUI @WSE_PACKAGE_BUILD_IUI@)
+set(WSE_PACKAGE_HAS_OUI @WSE_PACKAGE_BUILD_OUI@)
+set(WSE_PACKAGE_HAS_TMR @WSE_PACKAGE_BUILD_TMR@)@WSE_PACKAGE_CONTROLLED_FLAGS_CMAKE@
+set(WSE_PACKAGE_HAS_NODE @WSE_PACKAGE_BUILD_NODE@)
+set(WSE_PACKAGE_HAS_PYTHON @WSE_PACKAGE_BUILD_PYTHON@)
+set(WSE_PACKAGE_HAS_JAVA @WSE_PACKAGE_BUILD_JAVA@)
+set(WSE_PACKAGE_BUNDLES_OPENSSL @WSE_PACKAGE_BUNDLES_OPENSSL@)
+set(WSE_PACKAGE_BUNDLES_LIBCAMERA @WSE_PACKAGE_BUNDLES_LIBCAMERA@)
+
+if(WSE_PACKAGE_HAS_TMR AND WSE_PACKAGE_BUNDLES_LIBCAMERA
+        AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(NOT TARGET WSE_LibcameraRuntime)
+        add_library(WSE_LibcameraRuntime SHARED IMPORTED)
+        set_target_properties(WSE_LibcameraRuntime PROPERTIES
+            IMPORTED_LOCATION "${WSE_PACKAGE_ROOT}/vendor/libcamera/lib/libcamera.so")
+    endif()
+    if(NOT TARGET WSE_LibcameraBaseRuntime)
+        add_library(WSE_LibcameraBaseRuntime SHARED IMPORTED)
+        set_target_properties(WSE_LibcameraBaseRuntime PROPERTIES
+            IMPORTED_LOCATION "${WSE_PACKAGE_ROOT}/vendor/libcamera/lib/libcamera-base.so")
+    endif()
+endif()
+
+# Linux OUIのStatic packageは最終ConsumerがVulkan／Wayland／DRMもLinkする。
+# Shared packageではWSE shared objectがこれらを解決済みのため、開発PackageをConsumerへ要求しない。
+if(WSE_PACKAGE_HAS_OUI
+        AND WSE_PACKAGE_LIBRARY_TYPE STREQUAL "STATIC"
+        AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_dependency(Vulkan 1.2)
+    find_dependency(PkgConfig)
+    pkg_check_modules(WSE_WAYLAND REQUIRED IMPORTED_TARGET wayland-client)
+    pkg_check_modules(WSE_DRM REQUIRED IMPORTED_TARGET libdrm)
+endif()
+
+# Static WSEではPrivate dependencyも最終ConsumerがLinkするため、Export Targetを
+# 読み込む前にlibcurl Backend TargetをPackage内の検証済み成果物から再構成する。
+# Public header／Public APIにはlibcurl型を公開しない。
+if(WSE_PACKAGE_LIBRARY_TYPE STREQUAL "STATIC"
+        AND WSE_PACKAGE_HAS_XPT
+        AND NOT TARGET WSE::CurlBackend)
+    add_library(WSE::CurlBackend STATIC IMPORTED)
+    set_target_properties(WSE::CurlBackend PROPERTIES
+        IMPORTED_CONFIGURATIONS "DEBUG;RELEASE"
+        MAP_IMPORTED_CONFIG_MINSIZEREL Release
+        MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
+        INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB
+        INTERFACE_INCLUDE_DIRECTORIES "${WSE_PACKAGE_ROOT}/vendor/libcurl/include"
+    )
+    if(WIN32)
+        set_target_properties(WSE::CurlBackend PROPERTIES
+            IMPORTED_LOCATION_DEBUG
+                "${WSE_PACKAGE_ROOT}/vendor/libcurl/lib/debug/libcurl-d.lib"
+            IMPORTED_LOCATION_RELEASE
+                "${WSE_PACKAGE_ROOT}/vendor/libcurl/lib/release/libcurl.lib"
+            INTERFACE_LINK_LIBRARIES
+                "bcrypt;advapi32;crypt32;secur32;ws2_32;iphlpapi"
+        )
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        if(WSE_PACKAGE_BUNDLES_OPENSSL)
+            set(OPENSSL_ROOT_DIR "${WSE_PACKAGE_ROOT}/vendor/openssl")
+            set(OPENSSL_USE_STATIC_LIBS TRUE)
+            set(OPENSSL_INCLUDE_DIR
+                "${WSE_PACKAGE_ROOT}/vendor/openssl/include")
+            set(OPENSSL_SSL_LIBRARY
+                "${WSE_PACKAGE_ROOT}/vendor/openssl/lib/libssl.a")
+            set(OPENSSL_CRYPTO_LIBRARY
+                "${WSE_PACKAGE_ROOT}/vendor/openssl/lib/libcrypto.a")
+        endif()
+        find_dependency(OpenSSL)
+        set_target_properties(WSE::CurlBackend PROPERTIES
+            IMPORTED_LOCATION_DEBUG
+                "${WSE_PACKAGE_ROOT}/vendor/libcurl/lib/debug/libcurl-d.a"
+            IMPORTED_LOCATION_RELEASE
+                "${WSE_PACKAGE_ROOT}/vendor/libcurl/lib/release/libcurl.a"
+            INTERFACE_LINK_LIBRARIES "OpenSSL::SSL;OpenSSL::Crypto"
+        )
+    else()
+        message(FATAL_ERROR
+            "This WSE XPT package does not provide a libcurl backend for ${CMAKE_SYSTEM_NAME}.")
+    endif()
+endif()
+
+@WSE_PACKAGE_CONTROLLED_BACKEND_CMAKE@
+include("${CMAKE_CURRENT_LIST_DIR}/WSETargets.cmake")
+
+# The package exposes only the WSE::Core / WSE::* component targets. The consumer-facing
+# `WonderStewEngine` compatibility alias was removed on 2026-09-13 under the pre-publication
+# legacy removal program; a consumer that wants the old spelling defines its own local alias.
+
+# Access-controlled extension packages may install an auxiliary CMake file.
+# Public packages contain no such file and therefore expose no private name or metadata.
+file(GLOB WSE_PACKAGE_PRIVATE_EXTENSION_FILES
+    "${CMAKE_CURRENT_LIST_DIR}/WSEPrivate*.cmake")
+foreach(WSE_PACKAGE_PRIVATE_EXTENSION_FILE IN LISTS WSE_PACKAGE_PRIVATE_EXTENSION_FILES)
+    include("${WSE_PACKAGE_PRIVATE_EXTENSION_FILE}")
+endforeach()
+unset(WSE_PACKAGE_PRIVATE_EXTENSION_FILE)
+unset(WSE_PACKAGE_PRIVATE_EXTENSION_FILES)
+
+# 版情報File。消費側がtoolset一致を検査する。
+set(WSE_PACKAGE_MANIFEST "${WSE_PACKAGE_ROOT}/wse-package.json")

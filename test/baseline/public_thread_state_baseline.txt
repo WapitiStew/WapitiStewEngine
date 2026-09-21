@@ -1,0 +1,4 @@
+# Reviewed public thread-state pointer debt. A public header must not expose std::thread*,
+# std::mutex*, or std::atomic*; synchronization is an implementation concern.
+# relative header path|exact occurrence count|classification
+# (empty - the public API exposes no thread-state pointer; new entries are forbidden)

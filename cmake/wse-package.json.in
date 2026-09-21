@@ -1,0 +1,51 @@
+{
+  "name": "wonderstew-engine",
+  "version": "@WSE_VERSION@",
+  "license": "@WSE_PACKAGE_LICENSE_EXPRESSION@",
+  "license_files": [@WSE_PACKAGE_LICENSE_FILES_JSON@],
+  "source_commit": "@WSE_PACKAGE_SOURCE_COMMIT@",
+  "extension_commit": "@WSE_PACKAGE_EXTENSION_COMMIT@",
+  "msvc_toolset": "@MSVC_TOOLSET_VERSION@",
+  "generated_utc": "@WSE_PACKAGE_GENERATED_UTC@",
+  "library_type": "@WSE_LIBRARY_TYPE@",
+  "components": {
+    "xpt": @WSE_PACKAGE_BUILD_XPT@,
+    "gef": @WSE_PACKAGE_BUILD_GEF@,
+    "iui": @WSE_PACKAGE_BUILD_IUI@,
+    "oui": @WSE_PACKAGE_BUILD_OUI@,
+    "tmr": @WSE_PACKAGE_BUILD_TMR@,@WSE_PACKAGE_CONTROLLED_COMPONENT_JSON@
+    "node": @WSE_PACKAGE_BUILD_NODE@,
+    "python": @WSE_PACKAGE_BUILD_PYTHON@,
+    "java": @WSE_PACKAGE_BUILD_JAVA@,
+    "dotnet": @WSE_PACKAGE_BUILD_DOTNET@
+  },
+  "dependency_catalog": {
+    "libcurl": {
+      "version": "@WSE_LIBCURL_BOOTSTRAP_VERSION@",
+      "license": "@WSE_LIBCURL_BOOTSTRAP_LICENSE@",
+      "source_sha256": "@WSE_LIBCURL_BOOTSTRAP_SHA256@",
+      "integration_status": "xpt-http-adapter"
+    },@WSE_PACKAGE_CONTROLLED_DEPENDENCY_JSON@
+    "libcamera": {
+      "version": "@WSE_LIBCAMERA_BOOTSTRAP_VERSION@",
+      "license": "@WSE_LIBCAMERA_BOOTSTRAP_LICENSE@",
+      "source_commit": "@WSE_LIBCAMERA_BOOTSTRAP_COMMIT@",
+      "bundled": @WSE_PACKAGE_BUNDLES_LIBCAMERA@,
+      "integration_status": "tmr-linux-camera-adapter"
+    },
+    "node-api-headers": {
+      "version": "@WSE_NODE_API_BOOTSTRAP_VERSION@",
+      "license": "@WSE_NODE_API_BOOTSTRAP_LICENSE@",
+      "source_sha256": "@WSE_NODE_API_BOOTSTRAP_SHA256@",
+      "bundled": @WSE_PACKAGE_BUILD_NODE@,
+      "integration_status": "javascript-node-api-build-sdk"
+    },
+    "pybind11": {
+      "version": "@WSE_PYBIND11_BOOTSTRAP_VERSION@",
+      "license": "@WSE_PYBIND11_BOOTSTRAP_LICENSE@",
+      "source_sha256": "@WSE_PYBIND11_BOOTSTRAP_SHA256@",
+      "bundled": @WSE_PACKAGE_BUILD_PYTHON@,
+      "integration_status": "python-binding-build-sdk"
+    }
+  }
+}

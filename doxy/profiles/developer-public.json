@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "audience": "developer",
+  "visibility": "public",
+  "source_root": "../.."
+}

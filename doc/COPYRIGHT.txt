@@ -1,0 +1,6 @@
+Copyright (C) 2025-2026 WapitiStew. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+
+The public WonderStewEngine SDK is licensed under the Apache License, Version 2.0.
+See the LICENSE and NOTICE files at the repository root. Third-party components
+retain their own licenses and copyright notices.

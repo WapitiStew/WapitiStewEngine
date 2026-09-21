@@ -1,0 +1,5 @@
+# Reviewed third-party lexical occurrences in public headers outside the sanctioned adapter
+# directory (api/cv/). The OpenCV coupling in the data headers and the cv_link.h enable-macro
+# header were removed on 2026-09-14 (LegacyRemovalInventory.tsv: core-opencv-coupling,
+# link-cv-link-header); this baseline is empty and the scan forbids any new entry.
+# relative public-header path|reviewed lexical occurrence count

@@ -1,0 +1,114 @@
+/* 左ペインの幅を一定に保つ場合など */
+#nav-tree-contents ul {
+  margin: 0;
+  padding: 0;
+}
+/* background & text */
+body {
+  background-color: #282C34;  /* 背景色 */
+  color:           #ABB2BF;   /* 文字色 */
+}
+
+/* 上部ナビゲーションのバー */
+#top {
+  background-color: #21252B;
+}
+
+/* タブの通常／ホバー色 */
+.tabs a {
+  color:           #61AFEF;  /* 通常リンク色 */
+}
+.tabs a:hover {
+  color:           #C678DD;  /* ホバー時リンク色 */
+}
+
+/* サイドバー背景 */
+#nav-tree {
+  background-color: #1E2127;
+}
+
+/* コードブロック背景 */
+div.fragment, pre {
+  background-color: #21252B;
+  color:            #E06C75;
+}
+
+/* Markdown の内容領域内の h1～h4 のサイズを調整 */
+div.contents h1, div.contents h2, div.contents h3, div.contents h4 {
+  line-height: 1.25;
+}
+
+/* Preserve ownership arrows and aligned formulas; scroll long lines horizontally. */
+div.fragment div.line {
+  white-space: pre;
+  word-wrap: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+div.contents h1 {
+  font-size: 2.0em;    /* 見出し1 のサイズを調整 */
+  margin-top: 1.2em;   /* 上余白を広げる例 */
+  margin-bottom: 0.8em;
+}
+
+div.contents h2 {
+  font-size: 1.6em;    /* 見出し2 */
+  margin-top: 1.1em;
+  margin-bottom: 0.6em;
+}
+
+div.contents h3 {
+  font-size: 1.3em;    /* 見出し3 */
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+
+/* 必要に応じて h4 以降も同様に */
+div.contents h4 {
+  font-size: 1.1em;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+}
+
+/* Source checkout paths in authored tables must remain readable in narrow panes. */
+.wse-source-path code {
+  overflow-wrap: anywhere;
+}
+
+/* The fixed 250px tree otherwise consumes almost the entire narrow preview pane. */
+@media screen and (max-width: 720px) {
+  #side-nav { display: none !important; }
+  #doc-content { margin-left: 0 !important; }
+  #projectalign { padding-right: 80px; }
+  #projectname { font-size: 20px; line-height: 1.15; }
+  table.markdownTable { display: block; max-width: 100%; overflow-x: auto; }
+  #doc-content { min-width: 0; }
+  div.contents, div.header { overflow-wrap: anywhere; }
+  .memtitle { float: none; max-width: 100%; box-sizing: border-box; }
+  .memitem { display: block !important; clear: both; max-width: 100%; box-sizing: border-box; }
+  /* Keep API signatures, member tables and graph image-map coordinates intact.
+     Each wide object scrolls locally instead of widening the entire document. */
+  table.memberdecls, table.fieldtable, table.params, table.tparams, table.directory,
+  div.contents > table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .memproto, div.directory, div.dyncontent, div.contents center {
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
+  }
+  .memproto table.memname { width: max-content; white-space: nowrap; overflow-wrap: normal; }
+  /* Long return types must not consume the entire member-list viewport. */
+  .memItemLeft, .memTemplItemLeft {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    min-width: 10ch;
+    max-width: 12ch;
+    vertical-align: top;
+  }
+  .memItemRight, .memTemplItemRight { min-width: 20ch; overflow-wrap: break-word; }
+  div.dyncontent div.center { width: max-content; min-width: 100%; text-align: left; }
+}

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>WapitiStew.Wse</AssemblyName>
+    <RootNamespace>WapitiStew.Wse</RootNamespace>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- The flat C ABI is bound with DllImport so the binding stays buildable without the
+         interop source generator; SYSLIB1054 only suggests the generator alternative. -->
+    <NoWarn>$(NoWarn);SYSLIB1054</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <IncludeSymbols>false</IncludeSymbols>
+    <Version>1.0.0</Version>
+    <Description>C# binding for WonderStewEngine</Description>
+    <PackageLicenseExpression Condition="'$(WseExtensionDir)' == ''">Apache-2.0</PackageLicenseExpression>
+    <Company>WapitiStew</Company>
+    <Copyright>Copyright (C) 2026 WapitiStew. All rights reserved.</Copyright>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <!-- The assembly ships as one library, so an extension overlay compiles its managed classes
+       into it. WseExtensionDir is empty for a build without an overlay and this adds nothing. -->
+  <ItemGroup Condition="'$(WseExtensionDir)' != ''">
+    <Compile Include="$(WseExtensionDir)/lang/cs/Wse/**/*.cs" />
+  </ItemGroup>
+
+</Project>

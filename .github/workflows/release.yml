@@ -1,0 +1,196 @@
+# The release pipeline: from a clean checkout it bootstraps the pinned dependencies, builds and
+# fully tests the distributable configurations, installs each package, verifies the public
+# boundary, builds and runs the external consumer against the installed result, stamps the SBOM
+# and third-party notices, and produces named archives with SHA-256 checksums as workflow
+# artifacts. It never publishes: creating a GitHub release or tag stays an owner action, and when
+# this workflow does run on a tag it refuses a tag that disagrees with the tree's version.
+#
+# Coverage is explicit, not implied: Windows archives carry every public component; Linux archives
+# currently carry the core and core+XPT shapes only, because the Linux OUI/TMR/IUI distributables
+# wait on their vendor and hardware gates. The bootstrap steps reach the network by
+# design - a release build is the explicit, separate operation the build rules reserve that for.
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows-public:
+    name: windows public (${{ matrix.library }})
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        library: [shared, static]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache bootstrap outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            .bootstrap-cache
+            vendor
+          key: release-vendor-${{ runner.os }}-${{ hashFiles('bootstrap-manifest.json') }}
+
+      - name: Bootstrap the pinned libcurl
+        run: python bootstrap.py --package libcurl
+
+      - name: Configure
+        run: cmake --preset windows-msvc-${{ matrix.library }}-public
+
+      - name: Build
+        run: cmake --build build/windows-msvc-${{ matrix.library }}-public --config Release --parallel
+
+      - name: Test
+        run: >-
+          ctest --test-dir build/windows-msvc-${{ matrix.library }}-public
+          -C Release --output-on-failure --output-junit ctest-junit.xml
+
+      - name: Install package
+        run: >-
+          cmake --install build/windows-msvc-${{ matrix.library }}-public
+          --config Release --prefix "${{ github.workspace }}/wse-package"
+
+      - name: Verify the public package boundary
+        run: >-
+          python test/package/verify_public_package.py
+          --package-root "${{ github.workspace }}/wse-package"
+          --expect-component xpt --expect-component gef --expect-component iui
+          --expect-component oui --expect-component tmr
+
+      - name: Build and run the external consumer against the package
+        run: >-
+          cmake -S test/consumer -B build-consumer
+          -DWSE_PACKAGE_ROOT="${{ github.workspace }}/wse-package"
+          -DWSE_EXPECT_PUBLIC_COMPONENTS=ON
+          && cmake --build build-consumer --config Release --parallel
+          && ./build-consumer/Release/wse_modern_target_consumer.exe
+
+      - name: Stamp release metadata
+        run: |
+          python tools/release/make_release_metadata.py --package-root "${{ github.workspace }}/wse-package"
+          Copy-Item README.md, README.ja.md, CHANGELOG.md "${{ github.workspace }}/wse-package/"
+
+      - name: Archive and checksum
+        id: archive
+        run: |
+          $manifest = Get-Content "${{ github.workspace }}/wse-package/wse-package.json" -Raw | ConvertFrom-Json
+          $version = $manifest.version
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne "wse-v$version") {
+            throw "Tag ${{ github.ref_name }} disagrees with the tree version $version."
+          }
+          $name = "wse-$version-windows-x64-msvc-${{ matrix.library }}"
+          Compress-Archive -Path "${{ github.workspace }}/wse-package/*" -DestinationPath "$name.zip"
+          $hash = (Get-FileHash -Algorithm SHA256 "$name.zip").Hash.ToLowerInvariant()
+          "$hash  $name.zip" | Out-File -Encoding ascii "$name.zip.sha256"
+          "name=$name" | Out-File -Append $env:GITHUB_OUTPUT
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.archive.outputs.name }}
+          path: |
+            ${{ steps.archive.outputs.name }}.zip
+            ${{ steps.archive.outputs.name }}.zip.sha256
+          if-no-files-found: error
+
+  linux-core-xpt:
+    name: linux ${{ matrix.shape }} (${{ matrix.library }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        library: [shared, static]
+        shape: [core, xpt]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache bootstrap outputs
+        if: matrix.shape == 'xpt'
+        uses: actions/cache@v4
+        with:
+          path: |
+            .bootstrap-cache
+            vendor
+          key: release-vendor-${{ runner.os }}-${{ hashFiles('bootstrap-manifest.json') }}
+
+      - name: Bootstrap the pinned libcurl
+        if: matrix.shape == 'xpt'
+        run: python3 bootstrap.py --package libcurl
+
+      - name: Configure
+        run: cmake --preset linux-gcc-${{ matrix.library }}-${{ matrix.shape }}
+
+      - name: Build
+        run: cmake --build build/linux-gcc-${{ matrix.library }}-${{ matrix.shape }} --parallel "$(nproc)"
+
+      - name: Test
+        run: >-
+          ctest --test-dir build/linux-gcc-${{ matrix.library }}-${{ matrix.shape }}
+          --output-on-failure --output-junit ctest-junit.xml
+
+      - name: Install package
+        run: >-
+          cmake --install build/linux-gcc-${{ matrix.library }}-${{ matrix.shape }}
+          --prefix "${{ github.workspace }}/wse-package"
+
+      - name: Verify the public package boundary
+        run: >-
+          python3 test/package/verify_public_package.py
+          --package-root "${{ github.workspace }}/wse-package"
+          ${{ matrix.shape == 'xpt' && '--expect-component xpt' || '' }}
+
+      - name: Build and run the external consumer against the package
+        run: >-
+          cmake -S test/consumer -B build-consumer
+          -DWSE_PACKAGE_ROOT="${{ github.workspace }}/wse-package"
+          -D${{ matrix.shape == 'xpt' && 'WSE_EXPECT_XPT_ONLY' || 'WSE_EXPECT_CORE_ONLY' }}=ON
+          && cmake --build build-consumer --parallel "$(nproc)"
+          && ./build-consumer/wse_modern_target_consumer
+
+      - name: Stamp release metadata
+        run: |
+          python3 tools/release/make_release_metadata.py --package-root "${{ github.workspace }}/wse-package"
+          cp README.md README.ja.md CHANGELOG.md "${{ github.workspace }}/wse-package/"
+
+      - name: Archive and checksum
+        id: archive
+        run: |
+          version="$(python3 -c "import json;print(json.load(open('${{ github.workspace }}/wse-package/wse-package.json'))['version'])")"
+          if [ "${{ github.ref_type }}" = "tag" ] && [ "${{ github.ref_name }}" != "wse-v${version}" ]; then
+            echo "Tag ${{ github.ref_name }} disagrees with the tree version ${version}." >&2
+            exit 1
+          fi
+          name="wse-${version}-linux-x64-gcc-${{ matrix.library }}-${{ matrix.shape }}"
+          tar -czf "${name}.tar.gz" -C "${{ github.workspace }}/wse-package" .
+          sha256sum "${name}.tar.gz" > "${name}.tar.gz.sha256"
+          echo "name=${name}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.archive.outputs.name }}
+          path: |
+            ${{ steps.archive.outputs.name }}.tar.gz
+            ${{ steps.archive.outputs.name }}.tar.gz.sha256
+          if-no-files-found: error
+
+  release-notes:
+    name: release notes
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # The notes are the CHANGELOG's top section - Unreleased until a version section exists -
+      # so the owner publishes from reviewed text rather than from a generated guess.
+      - name: Extract the top changelog section
+        run: |
+          awk '/^## /{n++} n==1' CHANGELOG.md > RELEASE_NOTES.md
+          test -s RELEASE_NOTES.md
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: RELEASE_NOTES.md

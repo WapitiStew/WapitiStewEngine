@@ -1,0 +1,6 @@
+WSE_BENCH	core.matrix.multiply_64	30	p50_ns=2711424	p95_ns=3162816	mean_ns=2780590	ops_per_s=359.6
+WSE_BENCH	core.matrix.inverse_48	30	p50_ns=1273071	p95_ns=1711367	mean_ns=1347111	ops_per_s=742.3
+WSE_BENCH	core.image.reduce_3c64_to_3c08_640x480	20	p50_ns=12146430	p95_ns=13850404	mean_ns=12319672	bytes_per_s=673264667
+WSE_BENCH	core.image.enlarge_3c08_to_3c16_640x480	20	p50_ns=12634939	p95_ns=18007427	mean_ns=13195109	bytes_per_s=209532191
+WSE_BENCH	core.map.copy_1MiB	50	p50_ns=40044	p95_ns=44638	mean_ns=40669	bytes_per_s=25783024222
+WSE_BENCH	core.log.single_line	200	p50_ns=150	p95_ns=154	mean_ns=157	ops_per_s=6388551.7

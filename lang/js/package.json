@@ -1,0 +1,12 @@
+{
+  "name": "@wapitistew/wse",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node-API binding for WonderStewEngine",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "Apache-2.0"
+}

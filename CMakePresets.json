@@ -1,0 +1,811 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-msvc-base",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/build/install/${presetName}"
+    },
+    {
+      "name": "windows-msvc-shared-all",
+      "inherits": "windows-msvc-base",
+      "displayName": "Windows MSVC Shared - All Components",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "SHARED",
+        "WSE_BUILD_XPT": "ON",
+        "WSE_BUILD_GEF": "ON",
+        "WSE_BUILD_IUI": "ON",
+        "WSE_BUILD_OUI": "ON",
+        "WSE_BUILD_TMR": "ON",
+        "WSE_BUILD_VPJ": "ON",
+        "WSE_BUILD_VPJ_VIDEO": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "windows-msvc-static-all",
+      "inherits": "windows-msvc-shared-all",
+      "displayName": "Windows MSVC Static - All Components",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "STATIC"
+      }
+    },
+    {
+      "name": "windows-msvc-shared-public",
+      "inherits": "windows-msvc-base",
+      "displayName": "Windows MSVC Shared - All Public Components",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "SHARED",
+        "WSE_BUILD_XPT": "ON",
+        "WSE_BUILD_GEF": "ON",
+        "WSE_BUILD_IUI": "ON",
+        "WSE_BUILD_OUI": "ON",
+        "WSE_BUILD_TMR": "ON",
+        "WSE_BUILD_VPJ": "OFF",
+        "WSE_BUILD_VPJ_VIDEO": "OFF"
+      }
+    },
+    {
+      "name": "windows-msvc-static-public",
+      "inherits": "windows-msvc-shared-public",
+      "displayName": "Windows MSVC Static - All Public Components",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "STATIC"
+      }
+    },
+    {
+      "name": "windows-msvc-shared-core",
+      "inherits": "windows-msvc-base",
+      "displayName": "Windows MSVC Shared - Core Only",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "SHARED",
+        "WSE_BUILD_XPT": "OFF",
+        "WSE_BUILD_GEF": "OFF",
+        "WSE_BUILD_IUI": "OFF",
+        "WSE_BUILD_OUI": "OFF",
+        "WSE_BUILD_TMR": "OFF",
+        "WSE_BUILD_VPJ": "OFF",
+        "WSE_BUILD_VPJ_VIDEO": "OFF"
+      }
+    },
+    {
+      "name": "windows-msvc-static-core",
+      "inherits": "windows-msvc-shared-core",
+      "displayName": "Windows MSVC Static - Core Only",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "STATIC"
+      }
+    },
+    {
+      "name": "windows-msvc-shared-xpt",
+      "inherits": "windows-msvc-shared-core",
+      "displayName": "Windows MSVC Shared - Core and XPT",
+      "cacheVariables": {
+        "WSE_BUILD_XPT": "ON"
+      }
+    },
+    {
+      "name": "windows-msvc-static-xpt",
+      "inherits": "windows-msvc-static-core",
+      "displayName": "Windows MSVC Static - Core and XPT",
+      "cacheVariables": {
+        "WSE_BUILD_XPT": "ON"
+      }
+    },
+    {
+      "name": "windows-msvc-shared-vpj-video",
+      "inherits": "windows-msvc-shared-xpt",
+      "displayName": "Windows MSVC Shared - Headless Controlled VPJ LAN Video",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ_VIDEO": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "windows-msvc-static-vpj-video",
+      "inherits": "windows-msvc-static-xpt",
+      "displayName": "Windows MSVC Static - Headless Controlled VPJ LAN Video",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ_VIDEO": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "windows-msvc-shared-oui",
+      "inherits": "windows-msvc-shared-core",
+      "displayName": "Windows MSVC Shared - Core and OUI",
+      "cacheVariables": {
+        "WSE_BUILD_OUI": "ON"
+      }
+    },
+    {
+      "name": "windows-msvc-static-oui",
+      "inherits": "windows-msvc-static-core",
+      "displayName": "Windows MSVC Static - Core and OUI",
+      "cacheVariables": {
+        "WSE_BUILD_OUI": "ON"
+      }
+    },
+    {
+      "name": "windows-msvc-shared-tmr",
+      "inherits": "windows-msvc-shared-core",
+      "displayName": "Windows MSVC Shared - Core and Tmr",
+      "cacheVariables": {
+        "WSE_BUILD_TMR": "ON",
+        "WSE_ENABLE_CAMERA_HARDWARE_TESTS": "ON"
+      }
+    },
+    {
+      "name": "windows-msvc-static-tmr",
+      "inherits": "windows-msvc-static-core",
+      "displayName": "Windows MSVC Static - Core and Tmr",
+      "cacheVariables": {
+        "WSE_BUILD_TMR": "ON",
+        "WSE_ENABLE_CAMERA_HARDWARE_TESTS": "ON"
+      }
+    },
+    {
+      "name": "linux-core-base",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/build/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "WSE_BUILD_XPT": "OFF",
+        "WSE_BUILD_GEF": "OFF",
+        "WSE_BUILD_IUI": "OFF",
+        "WSE_BUILD_OUI": "OFF",
+        "WSE_BUILD_TMR": "OFF",
+        "WSE_BUILD_VPJ": "OFF",
+        "WSE_BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-shared-core",
+      "inherits": "linux-core-base",
+      "displayName": "Linux GCC Shared - Core Only",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "/usr/bin/gcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "WSE_LIBRARY_TYPE": "SHARED"
+      }
+    },
+    {
+      "name": "linux-gcc-static-core",
+      "inherits": "linux-gcc-shared-core",
+      "displayName": "Linux GCC Static - Core Only",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "STATIC"
+      }
+    },
+    {
+      "name": "linux-gcc-shared-gef",
+      "inherits": "linux-gcc-shared-core",
+      "displayName": "Linux GCC Shared - Core and GEF",
+      "cacheVariables": {
+        "WSE_BUILD_GEF": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-static-gef",
+      "inherits": "linux-gcc-static-core",
+      "displayName": "Linux GCC Static - Core and GEF",
+      "cacheVariables": {
+        "WSE_BUILD_GEF": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-shared-iui",
+      "inherits": "linux-gcc-shared-core",
+      "displayName": "Linux GCC Shared - Core and IUI",
+      "cacheVariables": {
+        "WSE_BUILD_IUI": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-static-iui",
+      "inherits": "linux-gcc-static-core",
+      "displayName": "Linux GCC Static - Core and IUI",
+      "cacheVariables": {
+        "WSE_BUILD_IUI": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-shared-xpt",
+      "inherits": "linux-gcc-shared-core",
+      "displayName": "Linux GCC Shared - Core and XPT",
+      "cacheVariables": {
+        "WSE_BUILD_XPT": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-static-xpt",
+      "inherits": "linux-gcc-static-core",
+      "displayName": "Linux GCC Static - Core and XPT",
+      "cacheVariables": {
+        "WSE_BUILD_XPT": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-shared-vpj-control",
+      "inherits": "linux-gcc-shared-xpt",
+      "displayName": "Linux GCC Shared - Core, XPT, and Controlled VPJ Profile/Control",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "linux-gcc-static-vpj-control",
+      "inherits": "linux-gcc-static-xpt",
+      "displayName": "Linux GCC Static - Core, XPT, and Controlled VPJ Profile/Control",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "linux-gcc-shared-vpj-video",
+      "inherits": "linux-gcc-shared-vpj-control",
+      "displayName": "Linux GCC Shared - Controlled VPJ LAN Video",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ_VIDEO": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "linux-gcc-static-vpj-video",
+      "inherits": "linux-gcc-static-vpj-control",
+      "displayName": "Linux GCC Static - Controlled VPJ LAN Video",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ_VIDEO": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "linux-gcc-shared-oui",
+      "inherits": "linux-gcc-shared-core",
+      "displayName": "Linux GCC Shared - Core and OUI",
+      "cacheVariables": {
+        "WSE_BUILD_OUI": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-static-oui",
+      "inherits": "linux-gcc-static-core",
+      "displayName": "Linux GCC Static - Core and OUI",
+      "cacheVariables": {
+        "WSE_BUILD_OUI": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-shared-tmr",
+      "inherits": "linux-gcc-shared-core",
+      "displayName": "Linux GCC Shared - Core and Tmr",
+      "cacheVariables": {
+        "WSE_BUILD_TMR": "ON"
+      }
+    },
+    {
+      "name": "linux-gcc-static-tmr",
+      "inherits": "linux-gcc-static-core",
+      "displayName": "Linux GCC Static - Core and Tmr",
+      "cacheVariables": {
+        "WSE_BUILD_TMR": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-shared-core",
+      "inherits": "linux-core-base",
+      "displayName": "Linux Clang Shared - Core Only",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "/usr/bin/clang",
+        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+        "WSE_LIBRARY_TYPE": "SHARED"
+      }
+    },
+    {
+      "name": "linux-clang-static-core",
+      "inherits": "linux-clang-shared-core",
+      "displayName": "Linux Clang Static - Core Only",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "STATIC"
+      }
+    },
+    {
+      "name": "linux-clang-asan-core",
+      "inherits": "linux-clang-shared-core",
+      "displayName": "Linux Clang ASan/UBSan - Core Only",
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": "-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined"
+      }
+    },
+    {
+      "name": "linux-clang-shared-gef",
+      "inherits": "linux-clang-shared-core",
+      "displayName": "Linux Clang Shared - Core and GEF",
+      "cacheVariables": {
+        "WSE_BUILD_GEF": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-static-gef",
+      "inherits": "linux-clang-static-core",
+      "displayName": "Linux Clang Static - Core and GEF",
+      "cacheVariables": {
+        "WSE_BUILD_GEF": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-shared-iui",
+      "inherits": "linux-clang-shared-core",
+      "displayName": "Linux Clang Shared - Core and IUI",
+      "cacheVariables": {
+        "WSE_BUILD_IUI": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-static-iui",
+      "inherits": "linux-clang-static-core",
+      "displayName": "Linux Clang Static - Core and IUI",
+      "cacheVariables": {
+        "WSE_BUILD_IUI": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-shared-xpt",
+      "inherits": "linux-clang-shared-core",
+      "displayName": "Linux Clang Shared - Core and XPT",
+      "cacheVariables": {
+        "WSE_BUILD_XPT": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-static-xpt",
+      "inherits": "linux-clang-static-core",
+      "displayName": "Linux Clang Static - Core and XPT",
+      "cacheVariables": {
+        "WSE_BUILD_XPT": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-shared-tmr",
+      "inherits": "linux-clang-shared-core",
+      "displayName": "Linux Clang Shared - Core and Tmr",
+      "cacheVariables": {
+        "WSE_BUILD_TMR": "ON"
+      }
+    },
+    {
+      "name": "linux-clang-static-tmr",
+      "inherits": "linux-clang-static-core",
+      "displayName": "Linux Clang Static - Core and Tmr",
+      "cacheVariables": {
+        "WSE_BUILD_TMR": "ON"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-shared-core",
+      "inherits": "linux-core-base",
+      "displayName": "Linux ARM64 GCC Cross Shared - Core Only",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/linux-aarch64-gcc.cmake",
+        "WSE_LIBRARY_TYPE": "SHARED"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-static-core",
+      "inherits": "linux-arm64-gcc-shared-core",
+      "displayName": "Linux ARM64 GCC Cross Static - Core Only",
+      "cacheVariables": {
+        "WSE_LIBRARY_TYPE": "STATIC"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-shared-gef",
+      "inherits": "linux-arm64-gcc-shared-core",
+      "displayName": "Linux ARM64 GCC Cross Shared - Core and GEF",
+      "cacheVariables": {
+        "WSE_BUILD_GEF": "ON",
+        "WSE_BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-static-gef",
+      "inherits": "linux-arm64-gcc-static-core",
+      "displayName": "Linux ARM64 GCC Cross Static - Core and GEF",
+      "cacheVariables": {
+        "WSE_BUILD_GEF": "ON",
+        "WSE_BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-shared-iui",
+      "inherits": "linux-arm64-gcc-shared-core",
+      "displayName": "Linux ARM64 GCC Cross Shared - Core and IUI",
+      "cacheVariables": {
+        "WSE_BUILD_IUI": "ON",
+        "WSE_BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-static-iui",
+      "inherits": "linux-arm64-gcc-static-core",
+      "displayName": "Linux ARM64 GCC Cross Static - Core and IUI",
+      "cacheVariables": {
+        "WSE_BUILD_IUI": "ON",
+        "WSE_BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-shared-xpt",
+      "inherits": "linux-arm64-gcc-shared-core",
+      "displayName": "Linux ARM64 GCC Cross Shared - Core and XPT",
+      "cacheVariables": {
+        "WSE_BUILD_XPT": "ON",
+        "WSE_LIBCURL_ROOT": "${sourceDir}/vendor/libcurl-arm64",
+        "WSE_OPENSSL_ROOT": "${sourceDir}/vendor/openssl-arm64"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-static-xpt",
+      "inherits": "linux-arm64-gcc-static-core",
+      "displayName": "Linux ARM64 GCC Cross Static - Core and XPT",
+      "cacheVariables": {
+        "WSE_BUILD_XPT": "ON",
+        "WSE_LIBCURL_ROOT": "${sourceDir}/vendor/libcurl-arm64",
+        "WSE_OPENSSL_ROOT": "${sourceDir}/vendor/openssl-arm64"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-shared-vpj-control",
+      "inherits": "linux-arm64-gcc-shared-xpt",
+      "displayName": "Linux ARM64 GCC Cross Shared - Core, XPT, and Controlled VPJ Profile/Control",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ": "ON",
+        "WSE_BUILD_TESTING": "OFF",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-static-vpj-control",
+      "inherits": "linux-arm64-gcc-static-xpt",
+      "displayName": "Linux ARM64 GCC Cross Static - Core, XPT, and Controlled VPJ Profile/Control",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ": "ON",
+        "WSE_BUILD_TESTING": "OFF",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-shared-vpj-video",
+      "inherits": "linux-arm64-gcc-shared-vpj-control",
+      "displayName": "Linux ARM64 GCC Cross Shared - Controlled VPJ LAN Video",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ_VIDEO": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-static-vpj-video",
+      "inherits": "linux-arm64-gcc-static-vpj-control",
+      "displayName": "Linux ARM64 GCC Cross Static - Controlled VPJ LAN Video",
+      "cacheVariables": {
+        "WSE_BUILD_VPJ_VIDEO": "ON",
+        "WSE_EXTENSION_ROOT": "$penv{WSE_EXTENSION_ROOT}"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-shared-oui",
+      "inherits": "linux-arm64-gcc-shared-core",
+      "displayName": "Linux ARM64 GCC Cross Shared - Core and OUI",
+      "cacheVariables": {
+        "WSE_BUILD_OUI": "ON",
+        "WSE_BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-static-oui",
+      "inherits": "linux-arm64-gcc-static-core",
+      "displayName": "Linux ARM64 GCC Cross Static - Core and OUI",
+      "cacheVariables": {
+        "WSE_BUILD_OUI": "ON",
+        "WSE_BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-shared-tmr",
+      "inherits": "linux-arm64-gcc-shared-core",
+      "displayName": "Linux ARM64 GCC Cross Shared - Core and Tmr",
+      "cacheVariables": {
+        "WSE_BUILD_TMR": "ON",
+        "WSE_BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "linux-arm64-gcc-static-tmr",
+      "inherits": "linux-arm64-gcc-static-core",
+      "displayName": "Linux ARM64 GCC Cross Static - Core and Tmr",
+      "cacheVariables": {
+        "WSE_BUILD_TMR": "ON",
+        "WSE_BUILD_TESTING": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-msvc-shared-all-debug",
+      "configurePreset": "windows-msvc-shared-all",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-shared-all-release",
+      "configurePreset": "windows-msvc-shared-all",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-static-all-debug",
+      "configurePreset": "windows-msvc-static-all",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-static-all-release",
+      "configurePreset": "windows-msvc-static-all",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-shared-public-release",
+      "configurePreset": "windows-msvc-shared-public",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-static-public-release",
+      "configurePreset": "windows-msvc-static-public",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-shared-core-debug",
+      "configurePreset": "windows-msvc-shared-core",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-shared-core-release",
+      "configurePreset": "windows-msvc-shared-core",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-static-core-debug",
+      "configurePreset": "windows-msvc-static-core",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-static-core-release",
+      "configurePreset": "windows-msvc-static-core",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-shared-xpt-debug",
+      "configurePreset": "windows-msvc-shared-xpt",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-shared-xpt-release",
+      "configurePreset": "windows-msvc-shared-xpt",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-static-xpt-debug",
+      "configurePreset": "windows-msvc-static-xpt",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-static-xpt-release",
+      "configurePreset": "windows-msvc-static-xpt",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-shared-oui-debug",
+      "configurePreset": "windows-msvc-shared-oui",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-shared-oui-release",
+      "configurePreset": "windows-msvc-shared-oui",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-static-oui-debug",
+      "configurePreset": "windows-msvc-static-oui",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-static-oui-release",
+      "configurePreset": "windows-msvc-static-oui",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-shared-tmr-debug",
+      "configurePreset": "windows-msvc-shared-tmr",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-shared-tmr-release",
+      "configurePreset": "windows-msvc-shared-tmr",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-static-tmr-debug",
+      "configurePreset": "windows-msvc-static-tmr",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-static-tmr-release",
+      "configurePreset": "windows-msvc-static-tmr",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-gcc-shared-core-debug",
+      "configurePreset": "linux-gcc-shared-core"
+    },
+    {
+      "name": "linux-gcc-static-core-debug",
+      "configurePreset": "linux-gcc-static-core"
+    },
+    {
+      "name": "linux-gcc-shared-gef-debug",
+      "configurePreset": "linux-gcc-shared-gef"
+    },
+    {
+      "name": "linux-gcc-static-gef-debug",
+      "configurePreset": "linux-gcc-static-gef"
+    },
+    {
+      "name": "linux-gcc-shared-iui-debug",
+      "configurePreset": "linux-gcc-shared-iui"
+    },
+    {
+      "name": "linux-gcc-static-iui-debug",
+      "configurePreset": "linux-gcc-static-iui"
+    },
+    {
+      "name": "linux-clang-shared-core-debug",
+      "configurePreset": "linux-clang-shared-core"
+    },
+    {
+      "name": "linux-clang-static-core-debug",
+      "configurePreset": "linux-clang-static-core"
+    },
+    {
+      "name": "linux-clang-shared-gef-debug",
+      "configurePreset": "linux-clang-shared-gef"
+    },
+    {
+      "name": "linux-clang-static-gef-debug",
+      "configurePreset": "linux-clang-static-gef"
+    },
+    {
+      "name": "linux-clang-shared-iui-debug",
+      "configurePreset": "linux-clang-shared-iui"
+    },
+    {
+      "name": "linux-clang-static-iui-debug",
+      "configurePreset": "linux-clang-static-iui"
+    },
+    {
+      "name": "linux-gcc-shared-xpt-debug",
+      "configurePreset": "linux-gcc-shared-xpt"
+    },
+    {
+      "name": "linux-gcc-static-xpt-debug",
+      "configurePreset": "linux-gcc-static-xpt"
+    },
+    {
+      "name": "linux-gcc-shared-vpj-control-debug",
+      "configurePreset": "linux-gcc-shared-vpj-control"
+    },
+    {
+      "name": "linux-gcc-static-vpj-control-debug",
+      "configurePreset": "linux-gcc-static-vpj-control"
+    },
+    {
+      "name": "linux-gcc-shared-oui-debug",
+      "configurePreset": "linux-gcc-shared-oui"
+    },
+    {
+      "name": "linux-gcc-static-oui-debug",
+      "configurePreset": "linux-gcc-static-oui"
+    },
+    {
+      "name": "linux-gcc-shared-tmr-debug",
+      "configurePreset": "linux-gcc-shared-tmr"
+    },
+    {
+      "name": "linux-gcc-static-tmr-debug",
+      "configurePreset": "linux-gcc-static-tmr"
+    },
+    {
+      "name": "linux-clang-shared-xpt-debug",
+      "configurePreset": "linux-clang-shared-xpt"
+    },
+    {
+      "name": "linux-clang-static-xpt-debug",
+      "configurePreset": "linux-clang-static-xpt"
+    },
+    {
+      "name": "linux-clang-shared-tmr-debug",
+      "configurePreset": "linux-clang-shared-tmr"
+    },
+    {
+      "name": "linux-clang-static-tmr-debug",
+      "configurePreset": "linux-clang-static-tmr"
+    },
+    {
+      "name": "linux-arm64-gcc-shared-core-debug",
+      "configurePreset": "linux-arm64-gcc-shared-core"
+    },
+    {
+      "name": "linux-arm64-gcc-static-core-debug",
+      "configurePreset": "linux-arm64-gcc-static-core"
+    },
+    {
+      "name": "linux-arm64-gcc-shared-gef-debug",
+      "configurePreset": "linux-arm64-gcc-shared-gef"
+    },
+    {
+      "name": "linux-arm64-gcc-static-gef-debug",
+      "configurePreset": "linux-arm64-gcc-static-gef"
+    },
+    {
+      "name": "linux-arm64-gcc-shared-iui-debug",
+      "configurePreset": "linux-arm64-gcc-shared-iui"
+    },
+    {
+      "name": "linux-arm64-gcc-static-iui-debug",
+      "configurePreset": "linux-arm64-gcc-static-iui"
+    },
+    {
+      "name": "linux-arm64-gcc-shared-xpt-debug",
+      "configurePreset": "linux-arm64-gcc-shared-xpt"
+    },
+    {
+      "name": "linux-arm64-gcc-static-xpt-debug",
+      "configurePreset": "linux-arm64-gcc-static-xpt"
+    },
+    {
+      "name": "linux-arm64-gcc-shared-vpj-control-debug",
+      "configurePreset": "linux-arm64-gcc-shared-vpj-control"
+    },
+    {
+      "name": "linux-arm64-gcc-static-vpj-control-debug",
+      "configurePreset": "linux-arm64-gcc-static-vpj-control"
+    },
+    {
+      "name": "linux-arm64-gcc-shared-oui-debug",
+      "configurePreset": "linux-arm64-gcc-shared-oui"
+    },
+    {
+      "name": "linux-arm64-gcc-static-oui-debug",
+      "configurePreset": "linux-arm64-gcc-static-oui"
+    },
+    {
+      "name": "linux-arm64-gcc-shared-tmr-debug",
+      "configurePreset": "linux-arm64-gcc-shared-tmr"
+    },
+    {
+      "name": "linux-arm64-gcc-static-tmr-debug",
+      "configurePreset": "linux-arm64-gcc-static-tmr"
+    }
+  ]
+}

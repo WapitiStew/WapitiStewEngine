@@ -1,0 +1,5 @@
+# Reviewed legacy error-surface debt in public headers: occurrences of the legacy ErrorCode enum,
+# the wseException_ class, and the wseThrowException macros. The surface was removed on
+# 2026-09-14 (LegacyRemovalInventory.tsv: core-legacy-error); this baseline is empty and the
+# ratchet forbids any new entry.
+# relative header path|exact occurrence count|classification
