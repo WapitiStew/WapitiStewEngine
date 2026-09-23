@@ -50,6 +50,36 @@ function Test-Runtime {
     return $true
 }
 
+function Expand-PythonArchive {
+    param(
+        [Parameter(Mandatory = $true)][string]$ArchivePath,
+        [Parameter(Mandatory = $true)][string]$StagingRoot,
+        [int]$Attempts = 5
+    )
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+        try {
+            if (Test-Path -LiteralPath $StagingRoot) {
+                Remove-Item -LiteralPath $StagingRoot -Recurse -Force -ErrorAction Stop
+            }
+            New-Item -ItemType Directory -Force -Path $StagingRoot | Out-Null
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($ArchivePath, $StagingRoot)
+            return
+        }
+        catch {
+            $isIoError = $_.Exception -is [System.IO.IOException] -or
+                $_.Exception.InnerException -is [System.IO.IOException]
+            if (-not $isIoError) {
+                throw
+            }
+            if ($attempt -eq $Attempts) {
+                throw
+            }
+            Start-Sleep -Milliseconds (500 * $attempt)
+        }
+    }
+}
+
 $wseRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $manifestPath = Join-Path $wseRoot "bootstrap-manifest.json"
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
@@ -80,9 +110,7 @@ if (-not (Test-Runtime -RuntimeRoot $runtimeRoot -Runtime $runtime)) {
 
     $stagingRoot = Join-Path $cacheRoot "toolchains\cpython.staging.$([guid]::NewGuid().ToString('N'))"
     try {
-        New-Item -ItemType Directory -Force -Path $stagingRoot | Out-Null
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($archivePath, $stagingRoot)
+        Expand-PythonArchive -ArchivePath $archivePath -StagingRoot $stagingRoot
         $stagedRuntimeRoot = Join-Path $stagingRoot $runtime.extracted_root
         if (-not (Test-Runtime -RuntimeRoot $stagedRuntimeRoot -Runtime $runtime)) {
             throw "Pinned CPython archive is missing required runtime files."
