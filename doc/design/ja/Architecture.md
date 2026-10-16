@@ -1,8 +1,8 @@
 # WSE Architecture
 
 > Canonical source: [English Architecture](../en/Architecture.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## 対象
 
@@ -121,7 +121,7 @@ Data配置・観測可能な契約は規範であり、内部Source対応表はA
 - [公開API Policy](PublicApiPolicy.md): 命名、Error、Log、Header、第三者型境界。
 - [Thread／Ownership](ThreadOwnership.md): RAII、Callback、Cancellation、Shutdown。
 - [Build／Packaging](BuildPackaging.md): Component選択、Install、Offline依存。
-- [Version／Compatibility](VersionCompatibility.md): WSE 1.0.0互換契約。
+- [Version／Compatibility](VersionCompatibility.md): WSE 1.x互換契約。
 - [Security／Privacy](SecurityPrivacy.md): Data、依存、公開範囲。
 - [Hardware Validation](HardwareValidation.md): Build、Contract、Smoke、Certificationの区別。
 
@@ -134,4 +134,5 @@ Component契約は[Portable Core](PortableCore.md)、[GEF](GefFileFormats.md)、
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

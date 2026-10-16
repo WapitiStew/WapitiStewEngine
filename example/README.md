@@ -1,8 +1,8 @@
 # WSE Samples
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 Samples are organized as `example/<language>/<component>/`. Every sample is hardware-free unless
 its own header says otherwise: a machine without the physical device reports that through a
@@ -122,4 +122,5 @@ and the [Language Binding design](../doc/design/en/LanguageBindings.md).
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

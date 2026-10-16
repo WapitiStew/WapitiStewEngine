@@ -12,19 +12,43 @@
 namespace
 {
 COMMTIMEOUTS configured = {};
+DCB configured_state = {};
+bool reject_state = false;
+int state_reads = 0;
+bool reject_readback = false;
+bool round_readback = false;
 bool reject_timeouts = false;
 bool have_reply = true;
 
 HANDLE WINAPI openPort( LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE )
 {
+    state_reads = 0;
     return CreateEventW( nullptr, TRUE, FALSE, nullptr );
 }
 BOOL WINAPI getState( HANDLE, LPDCB state_out )
 {
-    *state_out = {};
+    if ( ++state_reads == 2 && reject_readback )
+    {
+        SetLastError( ERROR_ACCESS_DENIED );
+        return FALSE;
+    }
+    *state_out = configured_state;
+    if ( state_reads == 2 && round_readback )
+    {
+        state_out->BaudRate = 9600;
+    }
     return TRUE;
 }
-BOOL WINAPI setState( HANDLE, LPDCB ) { return TRUE; }
+BOOL WINAPI setState( HANDLE, LPDCB p_state_in )
+{
+    if ( reject_state )
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    configured_state = *p_state_in;
+    return TRUE;
+}
 BOOL WINAPI setup( HANDLE, DWORD, DWORD ) { return TRUE; }
 BOOL WINAPI purge( HANDLE, DWORD ) { return TRUE; }
 BOOL WINAPI setTimeouts( HANDLE, LPCOMMTIMEOUTS timeouts_in )
@@ -100,6 +124,48 @@ int main()
         }
     };
     const OperationContext context( Timeout::milliseconds( 60 ) );
+    const std::int32_t baud_rates[] = {
+        110, 300, 600, 1200, 2400, 4800, 9600, 14400,
+        19200, 38400, 57600, 115200, 230400, 460800, 921600,
+        1, 12345, 250000, 1000000, 2147483647
+    };
+    WindowsSerialUnderTest rate_port;
+    for ( const auto baud_rate : baud_rates )
+    {
+        expect( rate_port.open( "virtual-port", baud_rate, context ).succeeded() &&
+                    rate_port.getBaudRate() == baud_rate &&
+                    configured_state.BaudRate == static_cast<DWORD>( baud_rate ) &&
+                    configured_state.ByteSize == 8 && configured_state.Parity == NOPARITY &&
+                    configured_state.StopBits == ONESTOPBIT && !configured_state.fOutxCtsFlow &&
+                    !configured_state.fOutxDsrFlow && !configured_state.fOutX && !configured_state.fInX,
+                "every rate reaches the Windows adapter exactly with fixed 8N1 framing" );
+        reject_state = true;
+        const auto rejected = rate_port.open( "rejected-port", baud_rate, context );
+        expect( !rejected.succeeded() && rejected.error().code() == eTransportErrorCode::ConfigurationFailed &&
+                    rejected.error().nativeCode() == ERROR_INVALID_PARAMETER &&
+                    rate_port.isOpen() && rate_port.getDeviceName() == "virtual-port" &&
+                    rate_port.getBaudRate() == baud_rate,
+                "driver rejection preserves the active port and reports the native error" );
+        reject_state = false;
+    }
+    const auto unsupported = rate_port.open( "virtual-port", 0, context );
+    expect( !unsupported.succeeded() && unsupported.error().code() == eTransportErrorCode::InvalidArgument &&
+                rate_port.getBaudRate() == 2147483647,
+            "unsupported rate preserves the active port" );
+    round_readback = true;
+    const auto rounded = rate_port.open( "rounded-port", 12345, context );
+    expect( !rounded.succeeded() && rounded.error().code() == eTransportErrorCode::ConfigurationFailed &&
+                rounded.error().nativeCode() == 0 && rate_port.getDeviceName() == "virtual-port" &&
+                rate_port.getBaudRate() == 2147483647,
+            "rounded readback fails without a stale native error or owner replacement" );
+    round_readback = false;
+    reject_readback = true;
+    const auto unreadable = rate_port.open( "unreadable-port", 12345, context );
+    expect( !unreadable.succeeded() && unreadable.error().code() == eTransportErrorCode::ConfigurationFailed &&
+                unreadable.error().nativeCode() == ERROR_ACCESS_DENIED &&
+                rate_port.getDeviceName() == "virtual-port" && rate_port.getBaudRate() == 2147483647,
+            "readback failure preserves the port and reports the native error" );
+    reject_readback = false;
     WindowsSerialUnderTest port;
     expect( port.open( "test-port", 9600, context ).succeeded(), "open succeeds" );
     const auto received = port.receive( 512, context );

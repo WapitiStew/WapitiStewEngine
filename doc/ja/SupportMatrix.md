@@ -1,8 +1,8 @@
 # WSE Support Matrix
 
 > Canonical source: [English WSE Support Matrix](../en/SupportMatrix.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-09
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 本ページは`tools/release/make_support_matrix.py`がBuild自身のMetadata - Version source、
 ABI Header、Preset目録、Bootstrap manifest - から生成し、`wse.documentation.support_matrix`
@@ -10,7 +10,7 @@ Gateが本文とそれらの乖離を拒否します。編集は生成器に対�
 
 ## VersionとABI
 
-- WSE version: **1.0.0**
+- WSE version: **1.1.0**
 - Flat C ABI version（`WSE_CAPI_ABI_VERSION`）: **1**
 - Binding ABI version（Node／Python／Java）: **1**
 
@@ -42,3 +42,9 @@ Optionです。Release Archiveの正確な内容は`wse-package.json`が記録�
 | node-api-headers | 24.19.0 | MIT |
 | openssl | 3.5.8 | Apache-2.0 |
 | pybind11 | 3.1.0 | BSD-3-Clause |
+
+## 変更履歴
+
+| 日付 | 変更内容 |
+| --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |

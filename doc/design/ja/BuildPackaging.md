@@ -1,10 +1,14 @@
 # WSE Build／Packaging設計
 
 > Canonical source: [English Build and Packaging Design](../en/BuildPackaging.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-21
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Build model
+
+WSE 1.1.0はRootの`WSE_VERSION`からPackageとBinding RuntimeのVersionを生成します。
+JavaScript／.NETのPackage metadataと対訳文書も同じVersionとし、Binding ABIとC ABIは1を維持します。
+Version整合性GateとInstall済みPackageのConsumer検証でこれらの一致を確認します。
 
 Coreは常にBuildします。`WSE_BUILD_XPT`、`WSE_BUILD_GEF`、`WSE_BUILD_IUI`、`WSE_BUILD_OUI`、
 `WSE_BUILD_TMR`で公開Componentを選択します。
@@ -218,5 +222,6 @@ ExtensionへのApache許諾を意味しません。Extensionの識別子と条�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-21 | 公開SDKのApache表示と、公開・併用Packageの明示的なLicense metadataを追加した。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

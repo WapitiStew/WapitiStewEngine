@@ -1,8 +1,8 @@
 # WSE Hardware Validation Design
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Status vocabulary
 
@@ -99,4 +99,5 @@ compatibility gate or owner waiver does not establish hardware certification.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

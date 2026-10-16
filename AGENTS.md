@@ -74,10 +74,11 @@ Core/XPT and public binding smoke evidence is accepted, while unrun physical gat
 
 ## Change rules
 
-- Preserve source compatibility within WSE 1.0.0. Add a replacement and migration path before removal;
+- Preserve source compatibility within WSE 1.x. Add a replacement and migration path before removal;
   removals require the documented SemVer-major gate. While WSE remains unpublished the owner may
   waive this for a reviewed in-place change; such a change is recorded in the migration guide with
-  its rationale, and the version stays 1.0.0 until publication.
+  its rationale. Version changes require explicit owner instruction; the owner authorized
+  source/package/documentation/tag alignment at 1.1.0 on 2026-10-15.
 - Follow the function-parameter convention in the public API policy: direction suffixes on every
   parameter, `[in,out]`/`[out]`/`[in]` ordering, pointer out-parameters aliased on the first line of
   the body, and const-reference inputs for non-trivial types.
@@ -102,4 +103,5 @@ change is incomplete until these gates and `git diff --check` pass.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Record the owner-authorized 1.1.0 alignment and retain SemVer-major removal gates. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

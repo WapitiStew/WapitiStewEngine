@@ -1,8 +1,8 @@
 # WSE XPT Transport設計
 
 > Canonical source: [English XPT Transport Design](../en/XptTransport.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## 目的と範囲
 
@@ -159,8 +159,18 @@ Application Messageの区切りは行いません。Native I/Oの接続ErrorはO
 ## Serial operation semantics
 
 - `SerialPort::open`、`send`および`receive`は同期Operationで、TCP／UDPと同じ`OperationContext`を使用します。
-- 初期Portable framingは8 data bits、no parity、1 stop bit、no flow controlに固定します。対応Baud rateは
-  1200、2400、4800、9600、19200、38400、57600および115200です。
+- Portable framingは8 data bits、no parity、1 stop bit、no flow controlに固定します。
+  `open`は`int32_t`で表せる任意の正整数（1～2147483647）をOSへの設定要求として受け付けます。
+  0と負数はDeviceへ触れる前に`InvalidArgument`で拒否します。BindingもNative型の範囲外を拒否し、
+  JavaScriptは非数値、非有限値、小数を縮小変換前に拒否します。
+- 仮想Test対象の代表15種類は110、300、600、1200、2400、4800、9600、14400、19200、38400、57600、
+  115200、230400、460800、921600です。
+- Windowsは指定RateをNative DCBへ渡します。Linuxは`termios2`で代表Rateの標準Speed定数を使用し、それ以外は
+  `BOTHER`を使用します。設定後にWindowsはDCB、Linuxは入力・出力Speedの両方を読み戻します。
+  Native設定拒否、読戻し失敗、Rate不一致は`ConfigurationFailed`とし、候補だけを閉じて既存Ownerを保持します。
+  Native失敗ではOS Errorを保持し、不一致のNative codeは0です。成功にはOS読戻し値の完全一致が必要であり、
+  Libraryが近いRateへFallbackすることはありません。OSの読戻しは物理信号精度の測定や機器互換性の保証では
+  ありません。全言語Bindingも同じ契約です。
 - WindowsのDevice名は`COM3`等、Linuxは`/dev/ttyUSB0`、`/dev/ttyACM0`等のPathを指定します。
 - `open`は新DeviceのOpenと設定が成功した場合だけ既存Portを置換します。失敗時は既存Portを保持します。
 - Windowsの`open`はNative受信Timeoutを初期化し、Driver既定値や前利用者の設定に依存せず、
@@ -317,7 +327,13 @@ Windows MSVCとLinux GCC／ClangのShared／StaticでTCP／UDP LoopbackとPortab
 0 byte、65,507 byte、切詰め、Timeoutおよび別ThreadからのCancellationを確認します。Install treeだけを参照する
 Consumerは`WSE::Core`と`WSE::Xpt`へLinkし、Source treeまたはPlatform headerへ依存してはいけません。
 Linux SerialはPTYで双方向送受信、Timeout、CancellationおよびTransactional reopenを検証します。Windowsでは
-実機不要の入力／Error契約を検証します。
+実機不要の入力／Error契約を検証します。全15種類でKernelの正確なSpeed読戻しとBinary双方向PTY通信を
+確認します。任意Rateの12345、250000、1000000と正のint32境界値も検証します。WindowsのI/O Doubleでは
+同じ要求値、固定Framing、Driver拒否、読戻し失敗、丸めと既存Port保持を確認します。
+[Linux設定契約](../../../test/characterization/xpt_serial_linux_config_contract.cpp)は実PTYのioctlを差し替え、
+入力・出力の不一致、Native設定／読戻し失敗、候補の解放と既存OwnerでのI/O継続を検証します。
+JavaScriptは不正数値と縮小変換のOverflowも検証します。
+これらの仮想Testは`CONTRACT_VERIFIED`の根拠であり、実際のBaud timingと機器互換性は`HARDWARE_NOT_RUN`です。
 Retry契約Testは、既定無効、試行上限、固定／指数Backoff、飽和計算、非冪等、明示的Failure分類および
 Cancellation／Validation／Protocol／Securityの安全側停止を全Platform／Library形式で確認します。
 HTTP契約TestはLocal fake serverでMethod、Header、Body、status、Response上限、Timeout、Cancellation、
@@ -333,4 +349,7 @@ Python／JavaScript／Java／C#はRaw Transport失敗時のSend進捗とUDP切�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
+| 2026-10-15 | 正のint32の任意Baud要求とOS読戻し完全一致を採用。代表15種類の仮想検証を保持し、実機検証との区別を明記。 |
+| 2026-10-15 | Serialの受付を8種類から15種類へ拡張し、Linuxの正確な14400設定、仮想検証と実機検証の区別を明記。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

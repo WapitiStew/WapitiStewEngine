@@ -29,7 +29,8 @@ namespace
 // OpenFailed error and the sample exits. A COM port above COM9 needs the \\.\COM10 form on
 // Windows, which is a platform rule rather than an XPT one.
 constexpr const char DEVICE_NAME[] = "COM3";
-//! One of the supported rates: 1200/2400/4800/9600/19200/38400/57600/115200.
+//! OS requests accept 1..2147483647; native rejection or readback mismatch fails open.
+//! Representative virtual-test rates: 110/300/600/1200/2400/4800/9600/14400/19200/38400/57600/115200/230400/460800/921600.
 // Anything outside that list is rejected as an invalid argument before the device is touched.
 // The rate has to match what the peer is configured for; a mismatch does not fail, it delivers
 // bytes that are silently wrong. 115200 is chosen only because it is the common default of a

@@ -1,8 +1,8 @@
 # WSE Security／Privacy設計
 
 > Canonical source: [English Security and Privacy Design](../en/SecurityPrivacy.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Trust境界
 
@@ -37,4 +37,5 @@ Camera／DisplayのBuildまたはMock Testを物理Device認証として表示�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 外部辞書による公開前検査の境界を含む公開初版を記載。 |

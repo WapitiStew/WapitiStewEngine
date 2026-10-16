@@ -1,8 +1,8 @@
 # WSE Security and Privacy Design
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Trust boundaries
 
@@ -41,4 +41,5 @@ evidence follows [Hardware Validation](HardwareValidation.md).
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline, including the external publication inspection boundary. |

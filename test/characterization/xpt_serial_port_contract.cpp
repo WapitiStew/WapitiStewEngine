@@ -28,6 +28,7 @@
 //! @par     Return Code: LF
 //!
 //! @date
+//!   Oct-15, 2026   Verify representative and arbitrary baud rates with virtual terminals.
 //!   Aug-26, 2026   Create New.
 //!
 //! @copyright
@@ -50,6 +51,8 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <poll.h>
+#include <asm/termbits.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #endif
 
@@ -185,10 +188,14 @@ int main()
     expect( !empty_device.succeeded() && empty_device.error().code() ==
                 wse::xpt::eTransportErrorCode::InvalidArgument,
             "Serial open rejects an empty device" );
-    const auto invalid_baud = validation_port.open( "invalid", 12345, context() );
-    expect( !invalid_baud.succeeded() && invalid_baud.error().code() ==
-                wse::xpt::eTransportErrorCode::InvalidArgument,
-            "Serial open rejects an unsupported baud rate" );
+    const std::int32_t unsupported_rates[] = { -2147483647 - 1, -1, 0 };
+    for ( const auto baud_rate : unsupported_rates )
+    {
+        const auto invalid_baud = validation_port.open( "invalid", baud_rate, context() );
+        expect( !invalid_baud.succeeded() && invalid_baud.error().code() ==
+                    wse::xpt::eTransportErrorCode::InvalidArgument,
+                "Serial open rejects unsupported baud rates before device access" );
+    }
     const auto invalid_timeout = validation_port.open( "invalid", 9600, context( -1 ) );
     expect( !invalid_timeout.succeeded() && invalid_timeout.error().code() ==
                 wse::xpt::eTransportErrorCode::InvalidArgument,
@@ -227,6 +234,58 @@ int main()
     expect( pseudo_terminal.isOpen(), "Linux creates a PTY fixture" );
     if ( pseudo_terminal.isOpen() )
     {
+        // Retain the fifteen representative rates and exercise arbitrary values and boundaries.
+        const std::int32_t baud_rates[] = {
+            110, 300, 600, 1200, 2400, 4800, 9600, 14400,
+            19200, 38400, 57600, 115200, 230400, 460800, 921600,
+            1, 12345, 250000, 1000000, 2147483647
+        };
+        wse::xpt::SerialPort rate_port;
+        for ( const auto baud_rate : baud_rates )
+        {
+            const auto configured = rate_port.open( pseudo_terminal.getSlaveName(), baud_rate, context() );
+            expect( configured.succeeded() && rate_port.getBaudRate() == baud_rate,
+                    "Every supported baud rate opens and reopens a PTY" );
+            if ( !configured.succeeded() )
+            {
+                continue;
+            }
+            const int observer = ::open( pseudo_terminal.getSlaveName().c_str(), O_RDWR | O_NOCTTY );
+            termios2 settings = {};
+            expect( observer >= 0 && ::ioctl( observer, TCGETS2, &settings ) == 0 &&
+                        settings.c_ispeed == static_cast<speed_t>( baud_rate ) &&
+                        settings.c_ospeed == static_cast<speed_t>( baud_rate ) &&
+                        ( settings.c_cflag & ( CSIZE | PARENB | CSTOPB | CRTSCTS ) ) == CS8,
+                    "Kernel settings retain the exact rate and 8N1 without hardware flow control" );
+            if ( observer >= 0 )
+            {
+                ::close( observer );
+            }
+            const std::vector<std::uint8_t> payload { 0x00, 0x11, 0x13, 0xff };
+            const auto sent_at_rate = rate_port.send( payload, context() );
+            std::vector<std::uint8_t> observed;
+            expect( sent_at_rate.succeeded() && sent_at_rate.value() == payload.size() &&
+                        readMaster( &observed, pseudo_terminal.getMaster(), payload.size() ) &&
+                        observed == payload,
+                    "Every rate sends binary data through the PTY" );
+            const auto written = ::write( pseudo_terminal.getMaster(), payload.data(), payload.size() );
+            const auto reply = rate_port.receive( 64, context() );
+            expect( written == static_cast<ssize_t>( payload.size() ) && reply.succeeded() &&
+                        reply.value() == payload,
+                    "Every rate receives binary data through the PTY" );
+            const auto rejected = rate_port.open( pseudo_terminal.getSlaveName(), 0, context() );
+            expect( !rejected.succeeded() && rejected.error().code() ==
+                        wse::xpt::eTransportErrorCode::InvalidArgument && rate_port.isOpen() &&
+                        rate_port.getBaudRate() == baud_rate,
+                    "Unsupported rates preserve the active configuration" );
+        }
+        const auto non_terminal = rate_port.open( "/dev/null", 14400, context() );
+        expect( !non_terminal.succeeded() && non_terminal.error().code() ==
+                    wse::xpt::eTransportErrorCode::ConfigurationFailed &&
+                    non_terminal.error().nativeCode() != 0 && rate_port.isOpen() &&
+                    rate_port.getBaudRate() == 2147483647,
+                "Native configuration failure preserves the existing PTY and reports the error" );
+        rate_port.close();
         wse::xpt::SerialPort port;
         const auto opened = port.open( pseudo_terminal.getSlaveName(), 115200, context() );
         expect( opened.succeeded() && port.isOpen(), "Linux opens a PTY slave as SerialPort" );

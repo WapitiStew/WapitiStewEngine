@@ -1,8 +1,8 @@
 # WSE Build and Install Guide (Windows and Linux)
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 WSE requires C++17 and CMake 3.24 or later (3.25 or later for presets). The supported build
 environments are:
@@ -590,4 +590,5 @@ wants the old spelling defines its own local alias over `WSE::Core`.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

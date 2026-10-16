@@ -10,8 +10,9 @@ caller can never wait forever by accident.
 
     python example/python/xpt/serial_send_receive.py <path to the built _wse module> <device> <baud>
 
-Windows uses "COM3"-style names; Linux uses "/dev/ttyUSB0"-style paths. The supported rates are
-1200/2400/4800/9600/19200/38400/57600/115200.
+Windows uses "COM3"-style names; Linux uses "/dev/ttyUSB0"-style paths.
+Positive integer rates 1..2147483647 are requested from the OS; exact readback is required.
+Representative virtual-test rates: 110/300/600/1200/2400/4800/9600/14400/19200/38400/57600/115200/230400/460800/921600.
 """
 
 import importlib.util

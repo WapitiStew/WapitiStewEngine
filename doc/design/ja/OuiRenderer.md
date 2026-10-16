@@ -1,8 +1,8 @@
 # WSE OUI Renderer設計
 
 > Canonical source: [English OUI Renderer Design](../en/OuiRenderer.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## 目的と範囲
 
@@ -373,4 +373,5 @@ SHARED／STATIC gateを使用し、Package変更ではInstall後Consumerも実�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

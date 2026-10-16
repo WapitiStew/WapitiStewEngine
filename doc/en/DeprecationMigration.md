@@ -1,13 +1,21 @@
 # WSE Deprecation and Migration Guide
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 This guide defines deprecated public C++ surfaces, canonical replacements, and removal decisions.
 The complete machine-readable inventory is
 [`DeprecationLedger.tsv`](../deprecation/DeprecationLedger.tsv). The `wse.deprecation_ledger` test
 matches its counts, replacements, English/Japanese anchors, and removal gates against public headers.
+
+## WSE 1.1.0 version alignment
+
+The owner authorized source, package, documentation and tag alignment at 1.1.0 on 2026-10-15.
+Statements below about retaining 1.0.0 until publication describe the policy at the time of those
+historical changes. See [Version and Compatibility](../design/en/VersionCompatibility.md) for the
+current policy. This alignment removes no API and changes no ABI; serial physical-device validation
+remains `HARDWARE_NOT_RUN`.
 
 ## Application-owned logging and kit metadata
 
@@ -445,4 +453,5 @@ See [C ABI partial transfer](../design/en/CAbiContract.md) for guarantees and li
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

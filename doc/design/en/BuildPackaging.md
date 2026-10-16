@@ -1,10 +1,14 @@
 # WSE Build and Packaging Design
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-21
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Build model
+
+WSE 1.1.0 uses the root `WSE_VERSION` for generated package and binding runtime identities.
+JavaScript/.NET package metadata and the paired documentation carry the same version; binding
+ABI and C ABI remain 1. Version consistency and installed-consumer checks validate these identities.
 
 Core is always built. `WSE_BUILD_XPT`, `WSE_BUILD_GEF`, `WSE_BUILD_IUI`, `WSE_BUILD_OUI`, and
 `WSE_BUILD_TMR` select public components. JavaScript, Python, Java, and C# bindings are independent options.
@@ -233,5 +237,6 @@ attribution and rejection of missing or incorrectly narrowed terms.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-21 | Added public Apache notices and explicit license metadata for public and combined packages. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

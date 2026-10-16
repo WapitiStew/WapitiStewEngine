@@ -38,7 +38,7 @@ public content scan must pass without removing or weakening its rules.
 py -3 tools\offline\create_offline_kit.py ^
   --package-root build\install\windows-msvc-shared-xpt ^
   --output build\offline-kit\windows-x86_64-shared-xpt ^
-  --kit-id wse-1.0.0-windows-x86_64-shared-xpt ^
+  --kit-id wse-1.1.0-windows-x86_64-shared-xpt ^
   --toolchain-version 14.43
 ```
 
@@ -52,7 +52,7 @@ tree must be committed and must match the `extension_commit` the installed packa
 py -3 tools\offline\create_offline_kit.py ^
   --package-root build\install\windows-msvc-shared-vpj-video ^
   --output build\offline-kit\windows-x86_64-shared-vpj ^
-  --kit-id wse-confidential-1.0.0-windows-x86_64-shared-vpj ^
+  --kit-id wse-confidential-1.1.0-windows-x86_64-shared-vpj ^
   --classification controlled ^
   --extension-root ..\private-overlay ^
   --toolchain-version 14.43

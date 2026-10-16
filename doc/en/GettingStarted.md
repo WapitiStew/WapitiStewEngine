@@ -1,8 +1,8 @@
 # WSE Getting Started
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 This guide takes a new consumer from source to a tested installed CMake package. Run commands from
 the WSE source root. CMake configure does not download dependencies.
@@ -91,4 +91,5 @@ documented separately in the [How-to](HOWTO.md).
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

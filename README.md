@@ -1,8 +1,8 @@
 # WonderStewEngine
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-21
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 WonderStewEngine (WSE) is a reusable C++17 library suite. Core is always built; communication,
 files, input, rendering/projection, cameras, and language bindings are selected per consumer.
@@ -101,5 +101,6 @@ the [license guide](doc/en/LICENSE.md) for attribution and third-party license b
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-21 | Licensed the public SDK under Apache-2.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

@@ -1,8 +1,8 @@
 # WonderStewEngine
 
 > Canonical source: [English README](README.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-21
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 WonderStewEngine（WSE）は、複数Projectで再利用するC++17 Library群です。Coreは常にBuildし、通信、File、
 Input、Renderer／Projection、Cameraおよび言語BindingをConsumerごとに選択します。
@@ -96,5 +96,6 @@ Protocol詳細および識別MetadataをPublic package、Sanitized history、文
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-21 | 公開SDKにApache-2.0を適用した。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

@@ -29,16 +29,20 @@ int main()
     if( runtime == nullptr ) return 1;
 
     // CABI-BUFFER-04: strings include NUL and never silently truncate.
+    constexpr char EXPECTED_VERSION[] = WSE_TEST_EXPECTED_VERSION;
     std::size_t required = 0U;
     expect( succeeded( wse_capi_runtime_version( runtime, nullptr, &required, 0U ) )
-        && required == 6U, "Version query includes NUL" );
-    std::array<char, 6> version { '?', '?', '?', '?', '?', '?' };
-    auto status = wse_capi_runtime_version( runtime, version.data(), &required, 5U );
-    expect( status.category == WSE_CAPI_ERROR_INVALID_ARGUMENT && required == 6U
-        && version == std::array<char, 6>{ '?', '?', '?', '?', '?', '?' },
+        && required == sizeof( EXPECTED_VERSION ), "Version query includes NUL" );
+    std::array<char, sizeof( EXPECTED_VERSION )> version;
+    version.fill( '?' );
+    const auto untouched = version;
+    auto status = wse_capi_runtime_version( runtime, version.data(), &required, version.size() - 1U );
+    expect( status.category == WSE_CAPI_ERROR_INVALID_ARGUMENT && required == version.size()
+        && version == untouched,
         "Short string destination remains untouched and reports required size" );
     expect( succeeded( wse_capi_runtime_version( runtime, version.data(), &required, version.size() ) )
-        && std::memcmp( version.data(), "1.0.0", 6U ) == 0, "Exact string destination includes NUL" );
+        && std::memcmp( version.data(), EXPECTED_VERSION, version.size() ) == 0,
+        "Exact string destination includes the configured version and NUL" );
 
     // CABI-ERROR-03: capture diagnostics before any successful status call clears them.
     status = wse_capi_runtime_wait( runtime, -1, nullptr );

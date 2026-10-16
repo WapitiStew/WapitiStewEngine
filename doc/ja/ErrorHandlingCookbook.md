@@ -1,8 +1,8 @@
 # WSE Error Handling Cookbook
 
 > Canonical source: [English WSE Error Handling Cookbook](../en/ErrorHandlingCookbook.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 失敗しうる公開Operationはすべて[Result／Status契約](../design/ja/ResultContract.md)に従います。
 厳密な`Result`／`Status`は値かErrorのどちらか一方だけを運び、部分進捗契約（`TransferResult`／
@@ -240,4 +240,5 @@ catch (TransferException error) when (error.Code == (int)TransportErrorCode.Data
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

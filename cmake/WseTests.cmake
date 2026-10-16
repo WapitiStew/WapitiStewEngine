@@ -697,6 +697,7 @@ if(WSE_BUILD_TESTING)
 			WSE::Dotnet
 		)
 		target_include_directories(wse.capi.runtime_contract PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/api")
+		target_compile_definitions(wse.capi.runtime_contract PRIVATE WSE_TEST_EXPECTED_VERSION="${WSE_VERSION}")
 		target_link_libraries(wse.capi.runtime_contract PRIVATE Threads::Threads)
 		set_tests_properties(wse.capi.runtime_contract PROPERTIES TIMEOUT 10)
 		wse_add_characterization_test(wse.capi.camera_delivery_contract
@@ -1098,6 +1099,13 @@ if(WSE_BUILD_TESTING)
 				WSE::Xpt
 			)
 			set_tests_properties(wse.xpt.serial_windows_read_contract PROPERTIES TIMEOUT 10)
+		else()
+			wse_add_characterization_test(
+				wse.xpt.serial_linux_config_contract
+				test/characterization/xpt_serial_linux_config_contract.cpp
+				WSE::Xpt
+			)
+			set_tests_properties(wse.xpt.serial_linux_config_contract PROPERTIES TIMEOUT 10)
 		endif()
 	endif()
 

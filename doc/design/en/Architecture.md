@@ -1,8 +1,8 @@
 # WSE Architecture
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Scope
 
@@ -131,7 +131,7 @@ describe the current implementation and may change without an API change.
   boundaries.
 - [Thread and ownership model](ThreadOwnership.md) defines RAII, callbacks, cancellation, and shutdown.
 - [Build and packaging](BuildPackaging.md) defines selection, install targets, and offline dependencies.
-- [Version and compatibility](VersionCompatibility.md) defines the current WSE 1.0.0 compatibility promise.
+- [Version and compatibility](VersionCompatibility.md) defines the current WSE 1.x compatibility promise.
 - [Security and privacy](SecurityPrivacy.md) defines data, dependency, and public/private boundaries.
 - [Hardware validation](HardwareValidation.md) separates build, contract, smoke, and certification states.
 
@@ -145,4 +145,5 @@ Component contracts are defined by [Portable Core](PortableCore.md), [GEF](GefFi
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

@@ -1,8 +1,8 @@
 # WonderStewEngine 公開API 操作仕様書
 
 > Canonical source: [English Public API Reference](../en/API_REFERENCE.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 本書はInstall Packageの`include/wse/api`配下に含まれる公開Headerを対象とした操作仕様です。実装詳細、
 機種依存Extensionおよび公開Packageに含まれないComponentは扱いません。
@@ -123,6 +123,9 @@ GEFに`ReadLimits`、`readWithLimits`、CSVの`readReplace`、両Controllerの`w
   libcurl型は公開しない
 - Serial: Windows／Linux共通`SerialPort`が唯一のSerial面。Legacy `SerialConnector`は2026-09-13に削除
   （[非推奨API・移行Guide](DeprecationMigration.md#ja-xpt-transport)参照）
+- Serialは1～2147483647の任意の正整数をBaud rateのOS設定要求として受け付ける。8N1・Flow controlなしで固定。
+  従来の代表15種類の仮想Testを保持する。Native設定拒否・読戻し失敗・Rate不一致は`ConfigurationFailed`とし、
+  既存Ownerを保持する。OS読戻し値の一致は物理信号精度の保証ではない
 - Retry: `RetryPolicy`、`RetryDecision`。非冪等Operationを暗黙再送しない
 - TCP再接続はValidation後に旧Socketを閉じる。UDP再BindとSerial再Openは成功時だけ置換を確定する
 
@@ -378,4 +381,6 @@ BytesTransferred、ReceivedData、SourceEndpointはManaged値で、Disposeは不
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
+| 2026-10-15 | 正のint32の任意Baud要求、OS読戻し完全一致と代表15種類の検証を記載。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

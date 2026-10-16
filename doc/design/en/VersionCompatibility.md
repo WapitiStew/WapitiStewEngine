@@ -1,13 +1,17 @@
 # WSE Version and Compatibility Design
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
-WSE uses Semantic Versioning. The current version is 1.0.0, and it stays 1.0.0 until first
-publication. While WSE remains unpublished, the owner may approve a
-reviewed in-place change instead of a deprecation cycle; every such change is recorded with its
-rationale in the [deprecation and migration guide](../../en/DeprecationMigration.md).
+WSE uses Semantic Versioning. The current version is 1.1.0. On 2026-10-15 the owner authorized
+aligning the source, package metadata, documentation and Git tag at 1.1.0 for the additive XPT
+serial baud-rate capability, superseding the former pre-publication 1.0.0 version freeze.
+This version alignment introduces no API removal or binary-layout change; binding ABI and C ABI
+versions remain 1. Historical reviewed pre-publication changes and their rationale remain in the
+[deprecation and migration guide](../../en/DeprecationMigration.md). Future removals still require
+the documented approval, migration and SemVer-major gates. A version/tag does not certify hardware;
+serial physical-device validation remains `HARDWARE_NOT_RUN`.
 
 ## Change classes
 
@@ -22,7 +26,7 @@ The C++ API and the flat C ABI make different promises, because they cross diffe
 
 ### C++ API
 
-- Source compatibility is preserved within WSE 1.0.0. A replacement and a migration path precede a
+- Source compatibility is preserved within WSE 1.x. A replacement and a migration path precede a
   removal, and the removal itself requires the documented SemVer-major gate.
 - Binary compatibility holds only between builds that share the compiler family, toolset, standard
   library, architecture, and library type. Public headers expose standard-library types, so no
@@ -66,4 +70,5 @@ binding ABI.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

@@ -36,7 +36,7 @@ public final class SerialPort implements AutoCloseable {
      * Opens the port.
      *
      * @param deviceName platform device name, such as {@code COM3} or {@code /dev/ttyUSB0}
-     * @param baudRate baud rate
+     * @param baudRate positive integer OS baud request (1..2147483647); native readback must match
      * @param context explicit deadline and optional cancellation
      */
     public void open(String deviceName, int baudRate, OperationContext context) {

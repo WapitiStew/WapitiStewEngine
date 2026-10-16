@@ -1,8 +1,8 @@
 # WSE License
 
 > Canonical source: [English WSE License](../en/LICENSE.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-21
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 公開WonderStewEngine SDKにはApache License, Version 2.0を適用します。
 正式なLicense本文はRepository rootの[`LICENSE`](../../LICENSE)、Projectの帰属表示は
@@ -34,5 +34,6 @@ Extensionに対する権利を許諾しません。
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-21 | 公開SDKにApache-2.0を適用し、Extensionと依存物の別条件を記載した。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

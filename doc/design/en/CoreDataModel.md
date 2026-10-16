@@ -1,8 +1,8 @@
 # WSE Core Data Model
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Scope and type structure
 
@@ -155,4 +155,5 @@ RGB8 example without any camera or GPU. Numerical algorithm reconstruction is se
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

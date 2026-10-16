@@ -8,6 +8,7 @@
 //! @par     Return Code: LF
 //!
 //! @date
+//!   Oct-15, 2026   Accept positive int32 baud requests and verify native speed readback.
 //!   Sep-15, 2026   Initialize Windows read timeouts independently of previous port users.
 //!   Aug-26, 2026   Create New.
 //!
@@ -37,7 +38,8 @@
 #include <cerrno>
 #include <fcntl.h>
 #include <poll.h>
-#include <termios.h>
+#include <asm/termbits.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #endif
 
@@ -91,24 +93,6 @@ TransportError serialError(
             ? eTransportErrorCategory::Connection
             : eTransportErrorCategory::InputOutput;
     return TransportError( category, code_in, message_in, native_code_in );
-}
-
-bool isSupportedBaudRate( const std::int32_t baud_rate_in ) noexcept
-{
-    switch ( baud_rate_in )
-    {
-        case 1200:
-        case 2400:
-        case 4800:
-        case 9600:
-        case 19200:
-        case 38400:
-        case 57600:
-        case 115200:
-            return true;
-        default:
-            return false;
-    }
 }
 
 Clock::time_point operationDeadline( const OperationContext& context_in )
@@ -241,15 +225,22 @@ speed_t convertBaudRate( const std::int32_t baud_rate_in ) noexcept
 {
     switch ( baud_rate_in )
     {
+        case 110:    return B110;
+        case 300:    return B300;
+        case 600:    return B600;
         case 1200:   return B1200;
         case 2400:   return B2400;
         case 4800:   return B4800;
         case 9600:   return B9600;
+        case 14400:  return BOTHER;
         case 19200:  return B19200;
         case 38400:  return B38400;
         case 57600:  return B57600;
         case 115200: return B115200;
-        default:     return static_cast<speed_t>( 0 );
+        case 230400: return B230400;
+        case 460800: return B460800;
+        case 921600: return B921600;
+        default:     return BOTHER;
     }
 }
 
@@ -400,11 +391,11 @@ TransportStatus SerialPort::open(
         return TransportStatus::failure( validationError( "The serial port was moved from." ) );
     }
     if ( device_name_in.empty() || device_name_in.size() > static_cast<std::size_t>( INT_MAX ) ||
-         device_name_in.find( '\0' ) != std::string::npos || !isSupportedBaudRate( baud_rate_in ) ||
+         device_name_in.find( '\0' ) != std::string::npos || baud_rate_in <= 0 ||
          !context_in.isValid() )
     {
         return TransportStatus::failure( validationError(
-            "A device, supported baud rate, and non-negative timeout are required." ) );
+            "A device, positive baud rate, and non-negative timeout are required." ) );
     }
     if ( context_in.cancellation().isCancellationRequested() )
     {
@@ -471,6 +462,21 @@ TransportStatus SerialPort::open(
         return TransportStatus::failure( serialError( eTransportErrorCode::ConfigurationFailed,
                                                      "Configuring the serial device failed.", code ) );
     }
+    DCB applied = {};
+    applied.DCBlength = sizeof( applied );
+    if ( GetCommState( candidate, &applied ) == FALSE )
+    {
+        const DWORD code = GetLastError();
+        CloseHandle( candidate );
+        return TransportStatus::failure( serialError( eTransportErrorCode::ConfigurationFailed,
+                                                     "Reading applied serial settings failed.", code ) );
+    }
+    if ( applied.BaudRate != static_cast<DWORD>( baud_rate_in ) )
+    {
+        CloseHandle( candidate );
+        return TransportStatus::failure( serialError( eTransportErrorCode::ConfigurationFailed,
+                                                     "The applied serial baud rate differs from the request.", 0 ) );
+    }
     // Return buffered bytes or the first arriving byte, not a full requested buffer.
     // Driver defaults (or a previous user's settings) can otherwise hold short replies
     // until our operation deadline cancels the read and discards the received bytes.
@@ -515,8 +521,9 @@ TransportStatus SerialPort::open(
                                                      "Opening the serial device failed.", errno ) );
     }
 
-    termios settings = {};
-    if ( tcgetattr( candidate, &settings ) != 0 )
+    // Use termios2/BOTHER for rates without a standard Bnnn constant.
+    termios2 settings = {};
+    if ( ::ioctl( candidate, TCGETS2, &settings ) != 0 )
     {
         const int code = errno;
         ::close( candidate );
@@ -532,16 +539,33 @@ TransportStatus SerialPort::open(
     settings.c_cc[ VMIN ] = 0;
     settings.c_cc[ VTIME ] = 0;
     const speed_t native_baud_rate = convertBaudRate( baud_rate_in );
-    if ( cfsetispeed( &settings, native_baud_rate ) != 0 ||
-         cfsetospeed( &settings, native_baud_rate ) != 0 ||
-         tcsetattr( candidate, TCSANOW, &settings ) != 0 )
+    settings.c_cflag &= static_cast<tcflag_t>( ~( CBAUD | CIBAUD ) );
+    settings.c_cflag |= native_baud_rate;
+    settings.c_ispeed = static_cast<speed_t>( baud_rate_in );
+    settings.c_ospeed = static_cast<speed_t>( baud_rate_in );
+    if ( ::ioctl( candidate, TCSETS2, &settings ) != 0 )
     {
         const int code = errno;
         ::close( candidate );
         return TransportStatus::failure( serialError( eTransportErrorCode::ConfigurationFailed,
                                                      "Configuring the serial device failed.", code ) );
     }
-    if ( tcflush( candidate, TCIOFLUSH ) != 0 )
+    termios2 applied = {};
+    if ( ::ioctl( candidate, TCGETS2, &applied ) != 0 )
+    {
+        const int code = errno;
+        ::close( candidate );
+        return TransportStatus::failure( serialError( eTransportErrorCode::ConfigurationFailed,
+                                                     "Reading applied serial settings failed.", code ) );
+    }
+    if ( applied.c_ispeed != static_cast<speed_t>( baud_rate_in ) ||
+         applied.c_ospeed != static_cast<speed_t>( baud_rate_in ) )
+    {
+        ::close( candidate );
+        return TransportStatus::failure( serialError( eTransportErrorCode::ConfigurationFailed,
+                                                     "The applied serial baud rate differs from the request.", 0 ) );
+    }
+    if ( ::ioctl( candidate, TCFLSH, TCIOFLUSH ) != 0 )
     {
         const int code = errno;
         ::close( candidate );

@@ -41,6 +41,17 @@ find_package(WonderStewEngine CONFIG REQUIRED
 	NO_DEFAULT_PATH
 )
 
+if(DEFINED WSE_EXPECT_VERSION)
+	if(NOT WSE_PACKAGE_VERSION STREQUAL WSE_EXPECT_VERSION)
+		message(FATAL_ERROR "Installed CMake package version differs from ${WSE_EXPECT_VERSION}")
+	endif()
+	file(READ "${WSE_PACKAGE_ROOT}/wse-package.json" wse_version_manifest)
+	string(JSON wse_manifest_version GET "${wse_version_manifest}" version)
+	if(NOT wse_manifest_version STREQUAL WSE_EXPECT_VERSION)
+		message(FATAL_ERROR "Installed package manifest version differs from ${WSE_EXPECT_VERSION}")
+	endif()
+endif()
+
 if(WSE_PACKAGE_LIBRARY_TYPE STREQUAL "SHARED")
 	foreach(wse_private_backend IN ITEMS
 			WSE::CurlBackend WSE::TurboJpegBackend WSE_TurboJpegBackend)

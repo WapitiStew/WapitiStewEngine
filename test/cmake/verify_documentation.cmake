@@ -8,6 +8,14 @@ if(NOT DEFINED WSE_DOCUMENTATION_MANIFEST OR NOT EXISTS "${WSE_DOCUMENTATION_MAN
 	message(FATAL_ERROR "WSE_DOCUMENTATION_MANIFEST must name the paired-document manifest.")
 endif()
 
+file(READ "${WSE_SOURCE_ROOT}/CMakeLists.txt" wse_root_cmake_text)
+string(REGEX MATCH "set\\(WSE_VERSION \"([0-9]+\\.[0-9]+\\.[0-9]+)\"\\)"
+	wse_version_declaration "${wse_root_cmake_text}")
+if(NOT wse_version_declaration)
+	message(FATAL_ERROR "The root CMakeLists.txt must declare WSE_VERSION.")
+endif()
+set(wse_expected_documentation_version "WSE ${CMAKE_MATCH_1}")
+
 file(STRINGS "${WSE_DOCUMENTATION_MANIFEST}" wse_manifest_lines ENCODING UTF-8)
 set(wse_document_ids)
 set(wse_document_pair_count 0)
@@ -31,7 +39,7 @@ foreach(wse_manifest_line IN LISTS wse_manifest_lines)
 		message(FATAL_ERROR "Duplicate documentation manifest id: ${wse_id}")
 	endif()
 	list(APPEND wse_document_ids "${wse_id}")
-	if(NOT wse_documentation_version STREQUAL "WSE 1.0.0"
+	if(NOT wse_documentation_version STREQUAL wse_expected_documentation_version
 			OR NOT wse_last_synchronized MATCHES "^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$")
 		message(FATAL_ERROR "Invalid version/synchronization metadata for ${wse_id}")
 	endif()

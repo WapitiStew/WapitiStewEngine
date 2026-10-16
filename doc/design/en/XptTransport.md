@@ -1,8 +1,8 @@
 # WSE XPT Transport Design
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Purpose and scope
 
@@ -180,7 +180,20 @@ connection handshake, delivery acknowledgement or automatic replay.
 - `SerialPort::open`, `send`, and `receive` are synchronous and use the same `OperationContext`
   as TCP and UDP.
 - Portable framing is fixed at eight data bits, no parity, one stop bit, and no flow
-  control. Supported baud rates are 1200, 2400, 4800, 9600, 19200, 38400, 57600, and 115200.
+  control. `open` accepts any positive `int32_t` rate (1 through 2147483647) as an OS
+  configuration request. Zero and negative rates fail with `InvalidArgument` before device access.
+  Bindings reject values outside the native type's range; JavaScript also rejects non-finite,
+  fractional and non-numeric values before narrowing.
+- The 15 representative rates remain covered by virtual tests: 110, 300, 600, 1200, 2400,
+  4800, 9600, 14400, 19200, 38400, 57600, 115200, 230400, 460800, and 921600.
+- Windows passes the requested rate to the native DCB. Linux uses `termios2`, retaining the
+  representative standard speed constants and using `BOTHER` for other rates. After configuration, Windows
+  reads the DCB back; Linux reads both input and output speeds. Native rejection, readback failure,
+  or any rate mismatch returns `ConfigurationFailed` and closes only the candidate, preserving
+  the existing owner. Native failures retain the OS error; a mismatch has native code zero.
+  Success requires exact OS-reported speed equality, not just a successful set call. There is no
+  library fallback to a nearby rate. OS readback does not measure physical signal accuracy or
+  certify device compatibility. All language bindings use this same contract.
 - Device names are forms such as `COM3` on Windows and paths such as `/dev/ttyUSB0` or
   `/dev/ttyACM0` on Linux.
 - `open` replaces an existing port only after opening and configuring the candidate succeeds.
@@ -361,7 +374,15 @@ Messages are diagnostic text, not machine-readable or localization keys.
 TCP/UDP loopback and portable serial contract tests run for Windows MSVC and Linux GCC/Clang in
 shared and static forms. UDP covers ordinary, zero-byte, 65,507-byte, truncation, timeout, and
 cross-thread cancellation behavior. Linux serial uses a PTY for bidirectional I/O, timeout,
-cancellation, and transactional reopen. Windows verifies the hardware-independent error contract.
+cancellation, and transactional reopen. All 15 rates have exact kernel speed readback and binary
+bidirectional PTY coverage, alongside arbitrary rates 12345, 250000 and 1000000 and the positive
+int32 boundaries. Windows I/O doubles verify the same request values, fixed framing, driver rejection,
+readback failure, rounded readback and preservation of the active port. The
+[Linux configuration contract](../../../test/characterization/xpt_serial_linux_config_contract.cpp)
+intercepts ioctl on real PTYs to verify both input/output mismatches, native set/readback failure,
+candidate cleanup and continued I/O on the previous owner. JavaScript tests reject invalid numbers
+and narrowing overflow. These virtual tests are `CONTRACT_VERIFIED` evidence;
+physical baud timing and device compatibility remain `HARDWARE_NOT_RUN`.
 Installed-tree consumers link `WSE::Core` and `WSE::Xpt`
 without using source-tree or platform headers.
 The retry contract test covers the default no-retry state, attempt limits, fixed and exponential
@@ -382,4 +403,7 @@ for each exception shape, ownership, compatibility and evidence limits. No bindi
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
+| 2026-10-15 | Accept positive int32 serial baud requests with exact OS readback; retain the 15 representative rates and distinguish virtual evidence from hardware validation. |
+| 2026-10-15 | Expand serial acceptance from 8 to 15 rates, including exact Linux 14400; specify virtual evidence and hardware limits. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

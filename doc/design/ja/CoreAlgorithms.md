@@ -1,8 +1,8 @@
 # WSE Core演算設計
 
 > Canonical source: [English Core Algorithms](../en/CoreAlgorithms.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## 対象と実装の対応
 
@@ -235,4 +235,5 @@ Bayer端処理、Channel配置の変更は観測可能な結果を変えるた�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

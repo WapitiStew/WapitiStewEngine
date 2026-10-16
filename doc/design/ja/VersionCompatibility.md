@@ -1,12 +1,16 @@
 # WSE Version／Compatibility設計
 
 > Canonical source: [English Version and Compatibility Design](../en/VersionCompatibility.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
-WSEはSemantic Versioningを使用します。現在のVersionは1.0.0で、初回公開まで1.0.0を維持します。WSEが未公開の間、Ownerは非推奨サイクルの代わりに審査済みのその場変更を
-承認できます。そのような変更はすべて根拠とともに
-[非推奨・移行Guide](../../ja/DeprecationMigration.md)へ記録します。
+WSEはSemantic Versioningを使用し、現在のVersionは1.1.0です。2026-10-15のOwner指示により、
+XPT SerialのBaud rate設定能力の追加に合わせ、Source、Package、文書とGit Tagを1.1.0へ揃えます。
+従来の公開前1.0.0固定規則はこの指示で更新されました。今回のVersion同期でAPI削除やBinary配置変更は
+行わず、Binding ABIとC ABIのVersionは1を維持します。過去の公開前変更と根拠は
+[非推奨・移行Guide](../../ja/DeprecationMigration.md)に保持します。今後の削除には、文書化された
+承認、MigrationとSemVer-major Gateが引き続き必要です。Version／Tagは実機認証を意味せず、
+Serial実機検証は`HARDWARE_NOT_RUN`のままです。
 
 ## 変更区分
 
@@ -20,7 +24,7 @@ C++ APIとFlat C ABIは越える境界が異なるため、異なる約束をし
 
 ### C++ API
 
-- WSE 1.0.0内ではSource互換を維持します。削除の前にReplacementと移行経路を用意し、削除自体は
+- WSE 1.x内ではSource互換を維持します。削除の前にReplacementと移行経路を用意し、削除自体は
   文書化されたSemVer-major Gateを必要とします。
 - Binary互換は、Compiler family、Toolset、標準Library、Architecture、Library形式が一致するBuild間で
   だけ成立します。公開Headerは標準Library型を公開するため、Compiler非依存のC++ ABIは約束しません。
@@ -59,4 +63,5 @@ Node／Python／Java共通で、.NET BindingはC ABIを使用します。非互�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

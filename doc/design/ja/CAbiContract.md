@@ -1,8 +1,8 @@
 # WSE 平坦C ABI設計
 
 > Canonical source: [English Flat C ABI Design](../en/CAbiContract.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## 範囲と構造: CABI-OWNER-01
 
@@ -136,7 +136,7 @@ HTTP ShimはTransient retryを無効にし、要求をNonIdempotentと分類し�
 | copyBytesを使うXPT Byte getter | 正確なPayload size | InvalidArgument、必要Sizeを維持 | PayloadだけCopy |
 
 Size／Count pointerは非NULLが必須です。先行するOwner検査で失敗すると変更しない場合があります。
-現Version文字列`1.0.0`の照会は6を返し、容量5は切詰めず失敗、容量6は16進で`31 2e 30 2e 30 00`をCopyします。
+現Version文字列`1.1.0`の照会は6を返し、容量5は切詰めず失敗、容量6は16進で`31 2e 31 2e 30 00`をCopyします。
 空Payloadは0で、終端を付加しません。確保と二回目の呼出しは利用側が行います。両呼出しの間もSource ownerを保持し、
 変更を直列化します。可変Objectの原子的Snapshotではありません。
 
@@ -264,4 +264,5 @@ CoreがSTATICでもShimは共有Libraryです。通常の全SuiteでHeader inven
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

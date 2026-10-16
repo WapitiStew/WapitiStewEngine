@@ -1,12 +1,19 @@
 # WSE非推奨API・移行Guide
 
 > Canonical source: [English Deprecation and Migration Guide](../en/DeprecationMigration.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 本書は公開C++ APIの非推奨面、正規Replacementおよび削除判定を定義します。機械可読な全件台帳は
 [`DeprecationLedger.tsv`](../deprecation/DeprecationLedger.tsv)です。台帳の件数、移行先、日英Anchorおよび
 削除Gateは`wse.deprecation_ledger`で公開Headerと照合されます。
+
+## WSE 1.1.0のVersion同期
+
+2026-10-15のOwner指示により、Source、Package、文書とTagを1.1.0へ揃えました。
+以下の「公開まで1.0.0を維持」という記述は過去の変更時点の規則です。現在の規約は
+[Version／Compatibility設計](../design/ja/VersionCompatibility.md)を参照してください。
+この同期でAPI削除やABI変更は行わず、Serial実機検証は`HARDWARE_NOT_RUN`を維持します。
 
 ## Application所有のLogとKit Metadata
 
@@ -416,4 +423,5 @@ BytesTransferred、ReceivedData、SourceEndpointはManaged値で、Disposeは不
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

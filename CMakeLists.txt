@@ -30,7 +30,7 @@ endif()
 # The single source of truth for the WSE version. Everything else - project(), the package
 # manifest, the binding runtime version, the README and documentation banners, and the binding
 # package metadata - derives from or is verified against this one value by wse.version.consistency.
-set(WSE_VERSION "1.0.0")
+set(WSE_VERSION "1.1.0")
 
 if(WSE_STANDALONE_BUILD)
 	project(WonderStewEngine VERSION ${WSE_VERSION} LANGUAGES C CXX)

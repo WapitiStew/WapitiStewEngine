@@ -1,8 +1,8 @@
 # WonderStewEngine SDK
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 WonderStewEngine (WSE) is a reusable C++ library suite for multiple projects. Core data, logging,
 and utilities are always available. Communication (XPT), files (GEF), input (IUI), output and
@@ -81,4 +81,5 @@ build/package, version/compatibility, security/privacy, and hardware-validation 
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

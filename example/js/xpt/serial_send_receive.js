@@ -41,7 +41,8 @@ if ( wse.SerialPort === undefined ) {
   throw new Error('This WSE build does not include the XPT component.');
 }
 
-// One of the supported rates: 1200/2400/4800/9600/19200/38400/57600/115200.
+// OS requests accept 1..2147483647; native rejection or readback mismatch fails open.
+// Representative virtual-test rates: 110/300/600/1200/2400/4800/9600/14400/19200/38400/57600/115200/230400/460800/921600.
 // The fastest of them is the default because it is the common one for modern USB adapters. A rate
 // outside that set is refused at open(); a rate the peer does not share opens successfully and
 // then exchanges nothing but noise, which no error can report.

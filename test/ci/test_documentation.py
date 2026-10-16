@@ -54,6 +54,26 @@ class DocumentationTests(unittest.TestCase):
         result = self.run_contract()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_version_tracks_root_source_of_truth(self):
+        # A future version must not require another hard-coded validator edit.
+        version = (self.root / "doc/DocumentationManifest.tsv").read_text().splitlines()[0].split("|")[3].split(" ")[1]
+        for path in self.root.rglob("*"):
+            if path.is_file():
+                path.write_text(path.read_text(encoding="utf-8").replace(version, "2.3.4"), encoding="utf-8")
+        result = self.run_contract()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_manifest_version_must_match_root_version(self):
+        manifest = self.root / "doc/DocumentationManifest.tsv"
+        lines = manifest.read_text(encoding="utf-8").splitlines()
+        fields = lines[0].split("|")
+        fields[3] = "WSE 9.9.9"
+        lines[0] = "|".join(fields)
+        manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        result = self.run_contract()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Invalid version/synchronization metadata", result.stderr)
+
     def test_existing_but_wrong_canonical_source_fails(self):
         path = self.root / "doc/ja/overview.md"
         self.write("doc/ja/overview.md", path.read_text(encoding="utf-8").replace(

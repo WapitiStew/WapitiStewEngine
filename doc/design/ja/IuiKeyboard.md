@@ -1,8 +1,8 @@
 # WSE IUI Keyboard設計
 
 > Canonical source: [English IUI Keyboard Design](../en/IuiKeyboard.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## 対象と構造
 
@@ -195,4 +195,5 @@ Sourceが使えない状態やLifecycle Test成功を実機認証へ昇格しま
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

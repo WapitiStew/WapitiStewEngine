@@ -63,9 +63,10 @@ class PiToolContract(unittest.TestCase):
         self.assertIn("> Canonical source: [", japanese)
         manifest = (WSE_ROOT / "doc/DocumentationManifest.tsv").read_text(encoding="utf-8")
         row = next(line for line in manifest.splitlines() if line.startswith("pi-tools|"))
+        version = row.split("|")[3]
         synchronized = row.split("|")[4]
         for text in (english, japanese):
-            self.assertIn("> Documentation version: WSE 1.0.0", text)
+            self.assertIn("> Documentation version: " + version, text)
             self.assertIn("> Last synchronized: " + synchronized, text)
             self.assertIn("inspect_pi4_environment.sh", text)
             self.assertIn("run_pi4_smoke.sh", text)

@@ -20,6 +20,7 @@
 #endif
 
 #include <cstddef>
+#include <cmath>
 #include <cstring>
 #include <cstdint>
 #include <initializer_list>
@@ -657,15 +658,24 @@ napi_value serialOpen( napi_env env_in, napi_callback_info info_in )
     if ( holder == nullptr ) return nullptr;
 
     std::string device;
-    std::int64_t baud_rate = 0;
+    double baud_rate = 0;
     wse::xpt::OperationContext context( wse::xpt::Timeout::milliseconds( 0 ) );
     if ( !readString( &device, env_in, arguments.values[ 0 ] )
-         || napi_get_value_int64( env_in, arguments.values[ 1 ], &baud_rate ) != napi_ok
          || !readContext( &context, env_in, arguments.values[ 2 ] ) )
     {
         return nullptr;
     }
 
+    if ( napi_get_value_double( env_in, arguments.values[ 1 ], &baud_rate ) != napi_ok ||
+         !std::isfinite( baud_rate ) || baud_rate < 1 || baud_rate > INT32_MAX ||
+         std::floor( baud_rate ) != baud_rate )
+    {
+        throwTransportError( env_in, wse::xpt::TransportError(
+            wse::xpt::eTransportErrorCategory::Validation,
+            wse::xpt::eTransportErrorCode::InvalidArgument,
+            "The serial baud rate must be an integer from 1 to 2147483647." ) );
+        return nullptr;
+    }
     const auto status = holder->port.open(
         device, static_cast<std::int32_t>( baud_rate ), context );
     if ( !status.succeeded() ) { throwTransportError( env_in, status.error() ); return nullptr; }

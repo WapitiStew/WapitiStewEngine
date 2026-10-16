@@ -1,8 +1,8 @@
 # WSE Result and Status Contract
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 This document defines the current C++ Result/Status representation, access rules and component
 boundaries. The implementation is [wse_Result.h](../../../api/wse/utility/wse_Result.h).
@@ -89,4 +89,5 @@ These tests do not establish exhaustive allocation-failure handling or physical-
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

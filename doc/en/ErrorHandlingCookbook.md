@@ -1,8 +1,8 @@
 # WSE Error Handling Cookbook
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 Every fallible public operation follows the
 [Result and status contract](../design/en/ResultContract.md): a strict `Result`/`Status` carries a
@@ -256,4 +256,5 @@ they do not guarantee a recoverable payload. See [C ABI](../design/en/CAbiContra
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

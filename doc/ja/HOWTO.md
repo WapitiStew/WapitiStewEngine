@@ -1,8 +1,8 @@
 # WSEの使い方
 
 > Canonical source: [English How-to](../en/HOWTO.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 Hardwareを開かない[C++](../../example/cpp/core/quickstart.cpp)、
 [JavaScript](../../example/js/core/quickstart.js)、[Python](../../example/python/core/quickstart.py)、
@@ -255,4 +255,5 @@ C ABIを呼びます。現在の公開面はCoreのみです。実機不要の�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

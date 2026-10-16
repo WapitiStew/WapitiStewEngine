@@ -491,6 +491,7 @@ export class UdpClient {
 /** A serial port. Only the portable new API is bound; the legacy connector is not exposed. */
 export class SerialPort {
   constructor();
+  /** Requests an integer baud rate in 1..2147483647; native readback must match exactly. */
   open(deviceName: string, baudRate: number, context: OperationContext): void;
   close(): void;
   isOpen(): boolean;

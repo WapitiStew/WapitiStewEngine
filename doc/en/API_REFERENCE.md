@@ -1,8 +1,8 @@
 # WonderStewEngine Public API Reference
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 This reference covers headers installed under `include/wse/api` and the optional installed language
 bindings. Implementation details, device-specific extensions, and components absent from the public
@@ -65,6 +65,10 @@ defined by the [Build and Install Guide](BuildGuide.md).
 
 ## Portable transport (XPT)
 
+- Serial accepts positive integer baud requests from 1 through 2147483647, with fixed 8N1
+  and no flow control. The original 15 representative rates remain covered by virtual tests.
+  Native rejection, readback failure or a rate mismatch returns `ConfigurationFailed` and retains
+  the existing owner. OS-reported equality does not certify physical signal accuracy.
 - `TcpClient`, `UdpClient`, and `SerialPort` are move-only RAII resource owners with structured
   `TransportResult<T>` errors, explicit timeout, and cancellation.
 - `TcpClient::checkPeerConnection()` observes an OS-visible FIN/reset without consuming pending
@@ -245,4 +249,6 @@ See [C ABI partial transfer](../design/en/CAbiContract.md) for guarantees and li
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
+| 2026-10-15 | Document arbitrary positive int32 baud requests, exact OS readback and the 15 representative rates. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

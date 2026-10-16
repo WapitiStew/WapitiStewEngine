@@ -17,8 +17,9 @@ import java.nio.charset.StandardCharsets;
  * <p>Arguments: {@code deviceName baudRate}. The native library is located through the
  * {@code -Dwse.runtime.path=...} system property rather than a command-line argument, as in every
  * other WSE Java sample, so this sample's own arguments start at the first position. Windows uses
- * {@code COM3}-style names and Linux uses {@code /dev/ttyUSB0}-style paths; the supported rates are
- * 1200, 2400, 4800, 9600, 19200, 38400, 57600, and 115200. The runtime load is by absolute path,
+ * {@code COM3}-style names and Linux uses {@code /dev/ttyUSB0}-style paths; positive integer rates 1..2147483647 require exact OS readback. Representative virtual-test rates are
+ * 110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200,
+ * 230400, 460800, and 921600. The runtime load is by absolute path,
  * which on Windows does not add the containing directory to the dependency search path, so the
  * engine directory must also be on {@code PATH}.
  *

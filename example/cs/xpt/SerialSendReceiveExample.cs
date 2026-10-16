@@ -12,7 +12,7 @@
 //!     @n 引数順序は arguments[0] がNative Library Path、arguments[1] がDevice名、arguments[2] が
 //!        Baud Rateである。Device名とBaud Rateが無い場合は、その旨を出力して0を返す。
 //!     @n Device名はWindowsでは "COM3"、Linuxでは "/dev/ttyUSB0" の形式である。Baud Rateは
-//!        1200／2400／4800／9600／19200／38400／57600／115200のいずれかである。
+//!        1～2147483647の正整数をOSへ要求し、読戻し完全一致を必要とする。代表値は110／300／600／1200／2400／4800／9600／14400／19200／38400／57600／115200／230400／460800／921600である。
 //!     @n 実Deviceが無い場合も失敗しない。構造化されたOpenFailedを出力して0を返す。
 //!     @n XPTはDefault Timeoutを持たない。全OperationがOperationContextを要求する。
 //!     \~english
@@ -20,7 +20,7 @@
 //!        and arguments[2] is the baud rate. Without a device name and a baud rate the sample
 //!        explains that and returns zero.
 //!     @n Windows uses "COM3"-style names and Linux uses "/dev/ttyUSB0"-style paths. The baud rate
-//!        is one of 1200/2400/4800/9600/19200/38400/57600/115200.
+//!        accepts integers 1..2147483647 when the OS reports the exact rate. Representative rates: 110/300/600/1200/2400/4800/9600/14400/19200/38400/57600/115200/230400/460800/921600.
 //!     @n A machine without the physical device does not fail: the structured OpenFailed is printed
 //!        and the sample still returns zero, which is the documented no-device behaviour.
 //!     @n XPT has no default timeout. Every operation requires an OperationContext.

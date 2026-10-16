@@ -1,8 +1,8 @@
 # Using WSE
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 Hardware-free quick starts are compiled or executed by CTest:
 [C++](../../example/cpp/core/quickstart.cpp), [JavaScript](../../example/js/core/quickstart.js),
@@ -259,4 +259,5 @@ C++ classes, and it currently exposes the Core surface only. See
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

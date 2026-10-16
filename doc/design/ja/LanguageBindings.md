@@ -1,8 +1,8 @@
 # WSE多言語Binding設計
 
 > Canonical source: [English Language Binding Design](../en/LanguageBindings.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## 目的と範囲
 
@@ -419,4 +419,5 @@ Native Export、Test、文書はOverlay側で保持し、公開専用Buildでは
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

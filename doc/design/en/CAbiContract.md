@@ -1,8 +1,8 @@
 # WSE Flat C ABI Design
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 ## Scope and structure: CABI-OWNER-01
 
@@ -149,8 +149,8 @@ CABI-TRANSFER-07 below defines retained progress and the compatible UDP entry po
 | XPT byte getter through copyBytes | Exact payload size | InvalidArgument, required size retained | Copy exactly payload bytes |
 
 Always provide a non-null size/count pointer. An earlier invalid owner check may leave it unchanged.
-For the current version string `1.0.0`, query returns 6; capacity 5 fails without truncating; capacity
-6 copies `31 2e 30 2e 30 00` in hexadecimal. Querying an empty payload returns 0; no terminator is added.
+For the current version string `1.1.0`, query returns 6; capacity 5 fails without truncating; capacity
+6 copies `31 2e 31 2e 30 00` in hexadecimal. Querying an empty payload returns 0; no terminator is added.
 Allocation and the second call belong to the caller. Retain the source owner and serialize mutation
 across both calls; this is not an atomic snapshot of a mutable object.
 
@@ -304,4 +304,5 @@ The normal full suite additionally checks the header inventory and documentation
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

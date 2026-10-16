@@ -1,8 +1,8 @@
 # WSE License
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-21
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 The public WonderStewEngine SDK is licensed under the Apache License, Version 2.0.
 The authoritative license text is in the repository root's [`LICENSE`](../../LICENSE);
@@ -37,5 +37,6 @@ expression. The Apache grant for the public SDK does not grant rights to the ext
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-21 | Applied Apache-2.0 to the public SDK and documented separate extension and dependency terms. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

@@ -115,6 +115,16 @@ function verifySerial() {
   const port = new binding.SerialPort();
   try {
     assert.equal(port.isOpen(), false);
+    for (const rate of [0, -1, 1.5, NaN, Infinity, -Infinity, 2147483648, 4294976896, Number.MAX_VALUE, '9600', null]) {
+      assert.throws(() => port.open('WSE_NONEXISTENT_PORT', rate, context),
+        (error) => error.code === binding.TransportErrorCode.InvalidArgument,
+        `invalid baud rate ${rate} must be rejected before narrowing`);
+    }
+    for (const rate of [1, 12345, 250000, 2147483647]) {
+      assert.throws(() => port.open('WSE_NONEXISTENT_PORT', rate, context),
+        (error) => error.code === binding.TransportErrorCode.OpenFailed,
+        `positive baud rate ${rate} must reach device open`);
+    }
     assert.throws(
       () => port.open('WSE_NONEXISTENT_PORT', 9600, context),
       (error) => {

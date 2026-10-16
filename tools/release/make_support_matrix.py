@@ -21,7 +21,7 @@ import re
 import sys
 from pathlib import Path
 
-SYNC_DATE = "2026-09-09"
+SYNC_DATE = "2026-10-15"
 
 
 def read(path: Path) -> str:
@@ -135,7 +135,8 @@ def render_en(data: dict) -> str:
         "",
     ]
     lines += dependency_table(data)
-    lines += [""]
+    lines += ["", "## Change history", "", "| Date | Change |", "| --- | --- |",
+              f"| {SYNC_DATE} | Synchronize documentation identity with WSE {data['version']}. |", ""]
     return "\n".join(lines)
 
 
@@ -175,7 +176,8 @@ def render_ja(data: dict) -> str:
         "",
     ]
     lines += dependency_table(data)
-    lines += [""]
+    lines += ["", "## 変更履歴", "", "| 日付 | 変更内容 |", "| --- | --- |",
+              f"| {SYNC_DATE} | 文書のVersion表記をWSE {data['version']}へ同期。 |", ""]
     return "\n".join(lines)
 
 

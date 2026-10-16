@@ -8,6 +8,7 @@
 //! @par     Return Code: LF
 //!
 //! @date
+//!   Oct-15, 2026   Accept positive int32 baud requests with native readback verification.
 //!   Aug-26, 2026   Create New.
 //!
 //! @copyright
@@ -66,9 +67,12 @@ class WSE_API SerialPort final
     //! \~japanese Deviceを8N1で同期Openする.
     //! \~english  Opens a device synchronously with 8N1 framing.
     //! @param [in] device_name_in Windowsの`COM3`またはLinuxの`/dev/ttyUSB0`等.
-    //! @param [in] baud_rate_in 1200、2400、4800、9600、19200、38400、57600、115200のいずれか.
+    //! @param [in] baud_rate_in 1..INT32_MAX (2147483647). OSへ要求する正整数Baud rate.
     //! @param [in] context_in 明示Timeout／Cancellation.
     //! @return 成否とStructured Error. 成功時だけ既存Portを置換する.
+    //! @note \~japanese 設定拒否・読戻し失敗・Rate不一致はConfigurationFailed. 実際の信号精度は保証しない.
+    //! @note \~english Configuration rejection, readback failure or rate mismatch returns ConfigurationFailed.
+    //!     OS readback does not certify physical signal accuracy.
     TransportStatus open(
           const std::string&      device_name_in
         , const std::int32_t      baud_rate_in

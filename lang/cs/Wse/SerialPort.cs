@@ -64,7 +64,7 @@ public sealed class SerialPort : IDisposable
 
     /// <summary>Opens the port.</summary>
     /// <param name="deviceName">Platform device name, such as <c>COM3</c> or <c>/dev/ttyUSB0</c>.</param>
-    /// <param name="baudRate">Baud rate.</param>
+    /// <param name="baudRate">Positive integer OS baud request (1..2147483647); native readback must match.</param>
     /// <param name="context">Explicit deadline and optional cancellation.</param>
     /// <exception cref="ArgumentNullException"><paramref name="deviceName"/> is null.</exception>
     /// <exception cref="WseException">Opening the port failed.</exception>

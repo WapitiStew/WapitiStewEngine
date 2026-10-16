@@ -1,8 +1,8 @@
 # WSE Raspberry Pi 4 Tool
 
 > Canonical source: [English Raspberry Pi 4 Tools](../pi/README.md)
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 これらのToolは明示的なRaspberry Pi 4実機Gateを支援します。Cross build、MockまたはInventory結果を
 実機認証へ読み替えてはいけません。
@@ -44,4 +44,5 @@ Serial Contractを検査します。成功時の状態は`HARDWARE_SMOKE_PASS`�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

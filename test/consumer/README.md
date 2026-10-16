@@ -20,6 +20,7 @@
 - Static OUI consumerへのD3D12／DXGI／D3DCompiler／User32 System link要件の伝播
 - Core-only PackageへのOptional Target、HeaderおよびDependency非混入
 - Shared／Static metadataと`WSE_STATIC`の伝播
+- `-DWSE_EXPECT_VERSION=1.1.0`指定時のInstall済みCMake設定とPackage manifestのVersion一致
 
 例:
 

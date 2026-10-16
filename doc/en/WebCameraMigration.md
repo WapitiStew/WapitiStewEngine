@@ -1,8 +1,8 @@
 # WebCamera Migration Guide
 
 > Canonical language: English
-> Documentation version: WSE 1.0.0
-> Last synchronized: 2026-09-20
+> Documentation version: WSE 1.1.0
+> Last synchronized: 2026-10-15
 
 This guide migrates the historical C++ `WebCamera` methods and the managed `CameraSession` binding
 used through Phase 6 to the canonical `WebCamera` API. Applications using ordinary USB/UVC cameras
@@ -116,4 +116,5 @@ implementation in a rollback commit; do not hard-reset the active work branch.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |
