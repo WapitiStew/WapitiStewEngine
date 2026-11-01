@@ -2,7 +2,7 @@
 
 > Canonical source: [English XPT Transport Design](../en/XptTransport.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-01
 
 ## 目的と範囲
 
@@ -57,7 +57,7 @@ Linux ARM64はShared／Static Cross buildとPackageに対応します。Pi 4のC
 | --- | --- |
 | TCP | [TcpClient.cpp](../../../platform/xpt/network/TcpClient.cpp): 一意PIMPLがSocket、Remote Endpoint、有効Local Endpointを所有 |
 | UDP | [UdpClient.cpp](../../../platform/xpt/network/UdpClient.cpp): 一意PIMPLがSocket、Family、Local Endpointを所有 |
-| Serial | [SerialPort.cpp](../../../platform/xpt/serial/SerialPort.cpp): 一意PIMPLがNative Portを所有。WindowsのOverlapped状態は操作ローカル |
+| Serial | [SerialPort.cpp](../../../platform/xpt/serial/SerialPort.cpp): 一意PIMPLがNative PortとWindowsの保留Readを所有。WriteのOverlapped状態は操作ローカル |
 | HTTP | [HttpClient.cpp](../../../platform/xpt/http/HttpClient.cpp): Process単位curl Runtimeと、試行単位Handle／Header List／Response蓄積領域。公開Native Handleなし |
 | Cancellation | [Cancellation.cpp](../../../core/xpt/operation/Cancellation.cpp): SourceとTokenが1つのAtomic Boolを共有 |
 | Retry判定 | [RetryPolicy.cpp](../../../core/xpt/retry/RetryPolicy.cpp): 純粋なPolicy計算。Workerや資源所有なし |
@@ -199,15 +199,24 @@ OpenはPath／Baud／Contextを検査し、候補を開いてRaw 8N1・Flow Cont
 Cancellation／Deadlineを再確認してから確定します。確定前は既存Handleを保持し、失敗後も使用できます。
 成功時は旧HandleをCloseして候補を取り込みます。名前解決前に旧Socketを閉じるTCP再接続とは異なります。
 
-LinuxはNonblocking DescriptorとOperation Deadlineに対するPollを使います。WindowsはPending転送ごとに
-EventとOVERLAPPEDを所有します。Timeout／Cancellation時は`CancelIoEx`後、Native完了まで待ってから
-Event、OVERLAPPED、Bufferを解放します。この最後の待機は`INFINITE`のため、取消を遅らせるDriverでは
-名目Deadlineを超え得ます。使用中Memoryを残して戻ることより、Native I/OのMemory寿命を優先します。
+LinuxはNonblocking DescriptorとOperation Deadlineに対するPollを使います。WindowsではPIMPLが
+ReadのEvent・OVERLAPPED・Bufferを呼出し間で所有します。Poll TimeoutではNative Readを取消さず、
+次のPollでも同じ要求の完了を回収します。完了確認をPoll Deadlineより先に行うため、完了済みDataは
+残りPoll時間0でも返せます。最大Sizeは返却Chunkの上限です。次の上限が縮んでも未返却Suffixを保持し、
+消費済みByteを重複返却しません。空のNative完了後も同じ呼出しDeadlineを使い、待機時間を延長しません。
+Binary設定では前利用者のNull byte除去・Error文字置換・Error時中止の設定も明示的に解除します。
 
-Sendは完了Chunkを報告しますが、取消対象のPending書込も既にWireへ影響している可能性があるため、
-返すByte数はRollbackや相手側受理の証明ではありません。Receiveは短い応答も含め上限までの取得Prefixを返します。
-Native Read／Writeの失敗経路ではPortをCloseする場合があり、Timeout／Cancellationでは保持します。
-復旧前にResultと`isOpen()`を確認します。生Transport操作はDevice再OpenやCommand再送を自動実行しません。
+Cancellation／closeは保留Readを取消し、Native完了を回収してから使用中Memoryを解放します。
+取消し中に回収したByteも返却TransferResultの意味あるPrefixとして保持します。Close・置換・破棄は
+Streamを終了し、Native I/O終了後に未返却Suffixを解放します。PIMPLのMoveでは要求のAddressとBufferを保持します。
+呼出し・Move・破棄は同じCaller ownerへ閉じ、Transport threadやCallbackを追加しません。
+
+Writeは例外巻戻し時もNative完了の回収までEvent・OVERLAPPED・借用入力を保持します。
+期限／取消しとの競合でも最終転送数を一度だけ加算し、全転送完了が競合に勝った場合は成功を返します。
+部分失敗は完了数を報告し、Byteを再送しません。これはRollbackや相手側受理の証明ではありません。
+Driverが取消し完了を遅らせる場合、回収待機は名目Deadlineを超え得ますが、Native I/OのMemory寿命を維持します。
+Native Read／Write失敗ではPortをCloseする場合があるため、復旧前にResultと`isOpen()`を確認します。
+生Transport操作はDevice再OpenやCommand再送を自動実行しません。
 
 ## Retry policy semantics
 
@@ -349,6 +358,7 @@ Python／JavaScript／Java／C#はRaw Transport失敗時のSend進捗とUDP切�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-01 | WindowsのReadをPoll期限越しに所有し、未返却Prefix・保留Writeの最終進捗・取消し／Close時のMemory寿命を明記。回帰試験ソースを準備し、実行は別途Ownerが指示するGateとする。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-10-15 | 正のint32の任意Baud要求とOS読戻し完全一致を採用。代表15種類の仮想検証を保持し、実機検証との区別を明記。 |
 | 2026-10-15 | Serialの受付を8種類から15種類へ拡張し、Linuxの正確な14400設定、仮想検証と実機検証の区別を明記。 |

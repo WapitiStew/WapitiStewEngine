@@ -2,7 +2,7 @@
 
 > Canonical source: [English README](README.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-01
 
 WonderStewEngine（WSE）は、複数Projectで再利用するC++17 Library群です。Coreは常にBuildし、通信、File、
 Input、Renderer／Projection、Cameraおよび言語BindingをConsumerごとに選択します。
@@ -15,6 +15,9 @@ Input、Renderer／Projection、Cameraおよび言語BindingをConsumerごとに
 | IUI | `WSE::Iui` | Keyboard入力状態 | Windows、Linux evdev |
 | OUI | `WSE::Oui` | Renderer、Display、Portable Projection | Windows D3D12、Linux Vulkan 1.2 |
 | Tmr | `WSE::Tmr` | Backend非依存Camera制御 | Windows MF、Linux V4L2／libcamera |
+
+WindowsのSerial Pollは保留Readと未返却SuffixをPort owner内へ保持します。送信進捗と取消し／Closeの
+回収契約は[XPT設計](doc/design/ja/XptTransport.md)を参照します。同期APIにTransport worker threadを追加しません。
 
 Shared／Static Library、Install可能なCMake Packageと、Node-API／pybind11／JNI／平坦C ABIによる
 JavaScript／Python／Java／C#（.NET 8）のOptional Bindingを提供します。Linux ARM64 Cross buildは検証済みです。

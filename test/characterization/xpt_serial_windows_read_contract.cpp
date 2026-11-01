@@ -5,9 +5,12 @@
 #include <Windows.h>
 #include <xpt/error/TransportError.h>
 #include <xpt/operation/OperationContext.h>
+#include <algorithm>
 #include <chrono>
 #include <cstring>
 #include <iostream>
+#include <map>
+#include <vector>
 
 namespace
 {
@@ -19,6 +22,24 @@ bool reject_readback = false;
 bool round_readback = false;
 bool reject_timeouts = false;
 bool have_reply = true;
+struct sPendingOperation
+{
+    unsigned char* p_read_buffer;
+    const unsigned char* p_write_buffer;
+    DWORD requested;
+    DWORD transferred;
+    bool is_complete;
+    bool is_aborted;
+};
+std::map< LPOVERLAPPED, sPendingOperation > pending;
+LPOVERLAPPED p_pending_read = nullptr;
+wse::xpt::CancellationSource* p_cancel_on_write = nullptr;
+bool complete_write_on_cancel = false;
+DWORD cancelled_write_progress = 0;
+DWORD maximum_write_chunk = MAXDWORD;
+std::vector< unsigned char > written;
+unsigned int reads_started = 0U;
+unsigned int writes_started = 0U;
 
 HANDLE WINAPI openPort( LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE )
 {
@@ -64,6 +85,7 @@ BOOL WINAPI setTimeouts( HANDLE, LPCOMMTIMEOUTS timeouts_in )
 BOOL WINAPI readPort( HANDLE, LPVOID data_out, DWORD size_in, LPDWORD count_out,
                       LPOVERLAPPED operation_inout )
 {
+    ++reads_started;
     // Model documented first-byte completion; all-zero defaults wait for size_in.
     const bool first_byte = configured.ReadIntervalTimeout == MAXDWORD &&
         configured.ReadTotalTimeoutMultiplier == MAXDWORD &&
@@ -78,13 +100,87 @@ BOOL WINAPI readPort( HANDLE, LPVOID data_out, DWORD size_in, LPDWORD count_out,
         return TRUE;
     }
     *count_out = 0;
+    pending[ operation_inout ] = { static_cast< unsigned char* >( data_out ), nullptr,
+                                  size_in, 0U, false, false };
+    p_pending_read = operation_inout;
     ResetEvent( operation_inout->hEvent );
     SetLastError( ERROR_IO_PENDING );
     return FALSE;
 }
-BOOL WINAPI cancelRead( HANDLE, LPOVERLAPPED operation_inout )
+BOOL WINAPI cancelPortOperation( HANDLE, LPOVERLAPPED operation_inout )
 {
-    return operation_inout == nullptr ? TRUE : SetEvent( operation_inout->hEvent );
+    const auto found = pending.find( operation_inout );
+    if ( found == pending.end() )
+    {
+        SetLastError( ERROR_NOT_FOUND );
+        return FALSE;
+    }
+    auto& operation = found->second;
+    if ( operation.p_write_buffer != nullptr )
+    {
+        operation.transferred = complete_write_on_cancel ? operation.requested :
+            ( std::min )( cancelled_write_progress, operation.requested );
+        written.insert( written.end(), operation.p_write_buffer,
+                        operation.p_write_buffer + operation.transferred );
+    }
+    operation.is_complete = true;
+    operation.is_aborted = operation.p_write_buffer == nullptr || !complete_write_on_cancel;
+    return SetEvent( operation_inout->hEvent );
+}
+
+BOOL WINAPI collectOperation( HANDLE, LPOVERLAPPED operation_inout,
+                              LPDWORD count_out, BOOL )
+{
+    const auto found = pending.find( operation_inout );
+    if ( found == pending.end() )
+    {
+        *count_out = 0;
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    if ( !found->second.is_complete )
+    {
+        *count_out = 0;
+        SetLastError( ERROR_IO_INCOMPLETE );
+        return FALSE;
+    }
+    *count_out = found->second.transferred;
+    const bool is_aborted = found->second.is_aborted;
+    pending.erase( found );
+    if ( p_pending_read == operation_inout )
+    {
+        p_pending_read = nullptr;
+    }
+    SetLastError( is_aborted ? ERROR_OPERATION_ABORTED : ERROR_SUCCESS );
+    return is_aborted ? FALSE : TRUE;
+}
+
+BOOL WINAPI writePort( HANDLE, LPCVOID data_in, DWORD size_in, LPDWORD count_out,
+                       LPOVERLAPPED operation_inout )
+{
+    ++writes_started;
+    const auto* p_data = static_cast< const unsigned char* >( data_in );
+    if ( p_cancel_on_write == nullptr )
+    {
+        *count_out = ( std::min )( size_in, maximum_write_chunk );
+        written.insert( written.end(), p_data, p_data + *count_out );
+        return TRUE;
+    }
+    *count_out = 0;
+    pending[ operation_inout ] = { nullptr, p_data, size_in, 0U, false, false };
+    ResetEvent( operation_inout->hEvent );
+    p_cancel_on_write->cancel();
+    SetLastError( ERROR_IO_PENDING );
+    return FALSE;
+}
+
+void completeRead( const std::vector< unsigned char >& bytes_in )
+{
+    auto& operation = pending.at( p_pending_read );
+    operation.transferred = ( std::min )( static_cast< DWORD >( bytes_in.size() ), operation.requested );
+    std::memcpy( operation.p_read_buffer, bytes_in.data(), operation.transferred );
+    operation.is_complete = true;
+    SetEvent( p_pending_read->hEvent );
 }
 }
 
@@ -99,7 +195,9 @@ BOOL WINAPI cancelRead( HANDLE, LPOVERLAPPED operation_inout )
 #define PurgeComm purge
 #define SetCommTimeouts setTimeouts
 #define ReadFile readPort
-#define CancelIoEx cancelRead
+#define WriteFile writePort
+#define GetOverlappedResult collectOperation
+#define CancelIoEx cancelPortOperation
 #include "../../platform/xpt/serial/SerialPort.cpp"
 #undef SerialPort
 #undef CreateFileW
@@ -109,6 +207,8 @@ BOOL WINAPI cancelRead( HANDLE, LPOVERLAPPED operation_inout )
 #undef PurgeComm
 #undef SetCommTimeouts
 #undef ReadFile
+#undef WriteFile
+#undef GetOverlappedResult
 #undef CancelIoEx
 
 int main()
@@ -178,6 +278,47 @@ int main()
     expect( std::chrono::steady_clock::now() - start < std::chrono::seconds( 1 ),
             "idle wait is bounded" );
     expect( port.isOpen(), "timeout preserves the port" );
+    const auto previous_reads = reads_started;
+    completeRead( { 'A', 'B', 'C', 'D' } );
+    const OperationContext no_wait( Timeout::milliseconds( 0 ) );
+    expect( port.receive( 1, no_wait ).value() == std::vector<std::uint8_t>( { 'A' } ) &&
+                port.receive( 2, no_wait ).value() == std::vector<std::uint8_t>( { 'B', 'C' } ) &&
+                port.receive( 1, no_wait ).value() == std::vector<std::uint8_t>( { 'D' } ) &&
+                reads_started == previous_reads,
+            "completion wins an expired poll and smaller capacities retain every suffix once" );
+    expect( !port.receive( 256, OperationContext( Timeout::milliseconds( 1 ) ) ).succeeded(),
+            "a new pending read can outlive its poll" );
+    WindowsSerialUnderTest moved( std::move( port ) );
+    completeRead( { 'M' } );
+    expect( !port.isOpen() && moved.receive( 1, no_wait ).value() == std::vector<std::uint8_t>( { 'M' } ),
+            "moving the owner preserves pending I/O storage" );
+    port = std::move( moved );
+
+    const std::vector<std::uint8_t> payload{ 1U, 2U, 3U, 4U, 5U };
+    written.clear();
+    maximum_write_chunk = 2U;
+    const auto sent = port.send( payload, context );
+    expect( sent.succeeded() && sent.value() == payload.size() && written == payload,
+            "partial native writes advance the buffer without loss or duplication" );
+    maximum_write_chunk = MAXDWORD;
+    CancellationSource cancelled_write;
+    p_cancel_on_write = &cancelled_write;
+    cancelled_write_progress = 2U;
+    written.clear();
+    const auto partial = port.send( payload, OperationContext( Timeout::milliseconds( 60 ), cancelled_write.token() ) );
+    p_cancel_on_write = nullptr;
+    expect( !partial.succeeded() && partial.error().code() == eTransportErrorCode::Cancelled &&
+                partial.value() == 2U && written == std::vector<std::uint8_t>( { 1U, 2U } ) && port.isOpen(),
+            "cancelled pending write progress is collected exactly once" );
+    CancellationSource completed_write;
+    p_cancel_on_write = &completed_write;
+    complete_write_on_cancel = true;
+    written.clear();
+    const auto completed = port.send( payload, OperationContext( Timeout::milliseconds( 60 ), completed_write.token() ) );
+    p_cancel_on_write = nullptr;
+    complete_write_on_cancel = false;
+    expect( completed.succeeded() && completed.value() == payload.size() && written == payload,
+            "a fully completed write racing cancellation is not reported as unsent" );
     reject_timeouts = true;
     const auto failed_open = port.open( "replacement-port", 9600, context );
     expect( !failed_open.succeeded() &&
@@ -186,5 +327,13 @@ int main()
             "timeout configuration failure is observable" );
     expect( port.isOpen() && port.getDeviceName() == "test-port",
             "failed configuration preserves the existing owner" );
+    reject_timeouts = false;
+    {
+        WindowsSerialUnderTest closing;
+        expect( closing.open( "closing-port", 9600, context ).succeeded(), "a closing owner opens" );
+        expect( !closing.receive( 256, OperationContext( Timeout::milliseconds( 1 ) ) ).succeeded(),
+                "close fixture owns a pending read" );
+    }
+    expect( pending.empty(), "destruction cancels and collects pending reads before storage release" );
     return failures == 0 ? 0 : 1;
 }

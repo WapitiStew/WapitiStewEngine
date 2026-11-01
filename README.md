@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-01
 
 WonderStewEngine (WSE) is a reusable C++17 library suite. Core is always built; communication,
 files, input, rendering/projection, cameras, and language bindings are selected per consumer.
@@ -15,6 +15,10 @@ files, input, rendering/projection, cameras, and language bindings are selected 
 | IUI | `WSE::Iui` | Keyboard input state | Windows, Linux evdev |
 | OUI | `WSE::Oui` | Renderer, display, portable projection | Windows D3D12, Linux Vulkan 1.2 |
 | Tmr | `WSE::Tmr` | Backend-independent camera control | Windows MF, Linux V4L2/libcamera |
+
+Windows serial polling retains pending reads and unread suffixes in the port owner. Send progress
+and cancellation/close cleanup follow the [XPT transport contract](doc/design/en/XptTransport.md);
+these synchronous APIs add no transport worker thread.
 
 WSE builds shared or static libraries and installable CMake packages. Optional Node-API,
 pybind11, JNI, and flat C ABI adapters expose the common facade to JavaScript, Python, Java,

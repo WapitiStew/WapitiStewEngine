@@ -171,48 +171,101 @@ class NativeEvent final
     }
 };
 
-TransportError waitForOverlapped(
+// Keeps stack-owned write state alive even if constructing an error throws.
+class PendingWriteGuard final
+{
+  private:
+    OVERLAPPED* m_ptr_operation;
+    HANDLE      m_handle;
+    bool        m_is_pending;
+
+  public:
+    PendingWriteGuard( OVERLAPPED* p_operation_inout, const HANDLE handle_in ) noexcept
+        : m_ptr_operation ( nullptr )
+        , m_handle        ( handle_in )
+        , m_is_pending    ( true )
+    {
+        OVERLAPPED& operation_inout = *p_operation_inout;
+        this->m_ptr_operation = &operation_inout;
+    }
+
+    PendingWriteGuard( const PendingWriteGuard& ) = delete;
+    PendingWriteGuard& operator=( const PendingWriteGuard& ) = delete;
+
+    ~PendingWriteGuard()
+    {
+        if ( this->m_is_pending )
+        {
+            CancelIoEx( this->m_handle, this->m_ptr_operation );
+            DWORD transferred = 0;
+            GetOverlappedResult( this->m_handle, this->m_ptr_operation, &transferred, TRUE );
+        }
+    }
+
+    void markCollected() noexcept
+    {
+        this->m_is_pending = false;
+    }
+};
+
+TransferResult<std::size_t> waitForOverlapped(
           OVERLAPPED*             p_overlapped_inout
     , const HANDLE                handle_in
     , const Clock::time_point     deadline_in
     , const CancellationToken&    cancellation_in
 )
 {
+    OVERLAPPED& overlapped_inout = *p_overlapped_inout;
+    TransportError failure;
+    DWORD transferred = 0;
     for ( ;; )
     {
+        if ( GetOverlappedResult( handle_in, &overlapped_inout, &transferred, FALSE ) != FALSE )
+        {
+            return TransferResult<std::size_t>( transferred );
+        }
+        const DWORD completion_code = GetLastError();
+        if ( completion_code != ERROR_IO_INCOMPLETE )
+        {
+            return TransferResult<std::size_t>( transferred,
+                serialError( eTransportErrorCode::SendFailed,
+                             "Completing serial send failed.", completion_code ) );
+        }
         if ( cancellation_in.isCancellationRequested() )
         {
-            CancelIoEx( handle_in, p_overlapped_inout );
-            WaitForSingleObject( p_overlapped_inout->hEvent, INFINITE );
-            return cancellationError();
+            failure = cancellationError();
+            break;
         }
-
         const Clock::time_point now = Clock::now();
         if ( now >= deadline_in )
         {
-            CancelIoEx( handle_in, p_overlapped_inout );
-            WaitForSingleObject( p_overlapped_inout->hEvent, INFINITE );
-            return timeoutError();
+            failure = timeoutError();
+            break;
         }
-
-        const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(
-            deadline_in - now );
+        const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>( deadline_in - now );
         const DWORD wait_ms = static_cast<DWORD>( ( std::max )( std::int64_t( 1 ),
             ( std::min )( std::int64_t( 20 ), remaining.count() ) ) );
-        const DWORD wait_result = WaitForSingleObject( p_overlapped_inout->hEvent, wait_ms );
-        if ( wait_result == WAIT_OBJECT_0 )
+        if ( WaitForSingleObject( overlapped_inout.hEvent, wait_ms ) == WAIT_FAILED )
         {
-            return TransportError();
-        }
-        if ( wait_result != WAIT_TIMEOUT )
-        {
-            const DWORD wait_code = GetLastError();
-            CancelIoEx( handle_in, p_overlapped_inout );
-            WaitForSingleObject( p_overlapped_inout->hEvent, INFINITE );
-            return serialError( eTransportErrorCode::Unknown,
-                                "Waiting for serial I/O failed.", wait_code );
+            failure = serialError( eTransportErrorCode::SendFailed,
+                                   "Waiting for serial send failed.", GetLastError() );
+            break;
         }
     }
+    // A completion racing with cancellation still contributes its progress once.
+    CancelIoEx( handle_in, &overlapped_inout );
+    transferred = 0;
+    if ( GetOverlappedResult( handle_in, &overlapped_inout, &transferred, TRUE ) != FALSE )
+    {
+        return TransferResult<std::size_t>( transferred );
+    }
+    const DWORD completion_code = GetLastError();
+    if ( completion_code != ERROR_OPERATION_ABORTED )
+    {
+        failure = serialError( eTransportErrorCode::SendFailed,
+                               "Collecting cancelled serial send failed.", completion_code );
+    }
+    return TransferResult<std::size_t>( transferred, failure );
 }
 
 #else
@@ -310,7 +363,12 @@ class SerialPort::Impl
 public:
     Impl()
 #if defined( _WIN32 )
-        : handle      ( INVALID_HANDLE_VALUE )
+        : handle            ( INVALID_HANDLE_VALUE )
+        , m_read_operation  ( {} )
+        , m_read_buffer     ( {} )
+        , m_read_size       ( 0 )
+        , m_read_offset     ( 0 )
+        , m_is_read_pending ( false )
 #else
         : descriptor  ( -1 )
 #endif
@@ -323,6 +381,11 @@ private:
   public:
 #if defined( _WIN32 )
     HANDLE handle;
+    OVERLAPPED                m_read_operation;
+    std::vector<std::uint8_t> m_read_buffer;
+    std::size_t               m_read_size;
+    std::size_t               m_read_offset;
+    bool                      m_is_read_pending;
 #else
     int descriptor;
 #endif
@@ -338,15 +401,191 @@ private:
 #endif
     }
 
+#if defined( _WIN32 )
+    // Cancel and collect before any owner releases the persistent read storage.
+    void cancelRead() noexcept
+    {
+        if ( this->m_is_read_pending )
+        {
+            CancelIoEx( this->handle, &this->m_read_operation );
+            DWORD transferred = 0;
+            GetOverlappedResult( this->handle, &this->m_read_operation, &transferred, TRUE );
+            this->m_is_read_pending = false;
+            this->m_read_size = ( std::min )( static_cast<std::size_t>( transferred ), this->m_read_buffer.size() );
+            this->m_read_offset = 0;
+        }
+    }
+
+    TransportError startRead( const std::size_t maximum_size_in )
+    {
+        if ( this->m_read_operation.hEvent == nullptr )
+        {
+            this->m_read_operation.hEvent = CreateEventW( nullptr, TRUE, FALSE, nullptr );
+            if ( this->m_read_operation.hEvent == nullptr )
+            {
+                return serialError( eTransportErrorCode::ResourceExhausted,
+                                    "Creating a serial read event failed.", GetLastError() );
+            }
+        }
+        // A small caller capacity limits the returned prefix, not owned native storage.
+        this->m_read_buffer.resize( ( std::max )( maximum_size_in, std::size_t( 256 ) ) );
+        const HANDLE event = this->m_read_operation.hEvent;
+        this->m_read_operation = {};
+        this->m_read_operation.hEvent = event;
+        if ( ResetEvent( event ) == FALSE )
+        {
+            return serialError( eTransportErrorCode::ReceiveFailed,
+                                "Resetting a serial read event failed.", GetLastError() );
+        }
+        this->m_read_size = 0;
+        this->m_read_offset = 0;
+        DWORD transferred = 0;
+        if ( ReadFile( this->handle, this->m_read_buffer.data(),
+                       static_cast<DWORD>( this->m_read_buffer.size() ),
+                       &transferred, &this->m_read_operation ) != FALSE )
+        {
+            this->m_read_size = transferred;
+            return TransportError();
+        }
+        const DWORD code = GetLastError();
+        if ( code == ERROR_IO_PENDING )
+        {
+            this->m_is_read_pending = true;
+            return TransportError();
+        }
+        this->m_read_size = ( std::min )( static_cast<std::size_t>( transferred ), this->m_read_buffer.size() );
+        return serialError( eTransportErrorCode::ReceiveFailed, "Receiving serial data failed.", code );
+    }
+
+    TransportError waitForRead( const Clock::time_point deadline_in,
+                                const CancellationToken& cancellation_in )
+    {
+        while ( this->m_is_read_pending )
+        {
+            DWORD transferred = 0;
+            if ( GetOverlappedResult( this->handle, &this->m_read_operation, &transferred, FALSE ) != FALSE )
+            {
+                this->m_is_read_pending = false;
+                this->m_read_size = transferred;
+                this->m_read_offset = 0;
+                return TransportError();
+            }
+            const DWORD code = GetLastError();
+            if ( code != ERROR_IO_INCOMPLETE )
+            {
+                this->m_is_read_pending = false;
+                this->m_read_size = ( std::min )( static_cast<std::size_t>( transferred ), this->m_read_buffer.size() );
+                this->m_read_offset = 0;
+                return serialError( eTransportErrorCode::ReceiveFailed, "Completing serial receive failed.", code );
+            }
+            if ( cancellation_in.isCancellationRequested() )
+            {
+                this->cancelRead();
+                return cancellationError();
+            }
+            const Clock::time_point now = Clock::now();
+            if ( now >= deadline_in )
+            {
+                // The port keeps the request, event and buffer for the next poll.
+                return timeoutError();
+            }
+            const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>( deadline_in - now );
+            const DWORD wait_ms = static_cast<DWORD>( ( std::max )( std::int64_t( 1 ),
+                ( std::min )( std::int64_t( 20 ), remaining.count() ) ) );
+            if ( WaitForSingleObject( this->m_read_operation.hEvent, wait_ms ) == WAIT_FAILED )
+            {
+                const DWORD wait_code = GetLastError();
+                this->cancelRead();
+                return serialError( eTransportErrorCode::ReceiveFailed, "Waiting for serial receive failed.", wait_code );
+            }
+        }
+        return TransportError();
+    }
+
+    std::vector<std::uint8_t> takeReadBytes( const std::size_t maximum_size_in )
+    {
+        const std::size_t count = ( std::min )( maximum_size_in, this->m_read_size - this->m_read_offset );
+        const auto first = this->m_read_buffer.begin() + this->m_read_offset;
+        std::vector<std::uint8_t> received( first, first + count );
+        this->m_read_offset += count;
+        return received;
+    }
+
+    TransferResult<std::vector<std::uint8_t>> receiveWindows(
+          const std::size_t maximum_size_in
+        , const OperationContext& context_in
+    )
+    {
+        const Clock::time_point deadline = operationDeadline( context_in );
+        try
+        {
+            for ( ;; )
+            {
+                if ( context_in.cancellation().isCancellationRequested() )
+                {
+                    this->cancelRead();
+                    return TransferResult<std::vector<std::uint8_t>>(
+                        this->takeReadBytes( maximum_size_in ), cancellationError() );
+                }
+                if ( this->m_read_offset < this->m_read_size )
+                {
+                    return TransferResult<std::vector<std::uint8_t>>( this->takeReadBytes( maximum_size_in ) );
+                }
+                if ( !this->m_is_read_pending )
+                {
+                    if ( Clock::now() >= deadline )
+                    {
+                        return TransferResult<std::vector<std::uint8_t>>( {}, timeoutError() );
+                    }
+                    const TransportError start_error = this->startRead( maximum_size_in );
+                    if ( !start_error.ok() )
+                    {
+                        auto received = this->takeReadBytes( maximum_size_in );
+                        if ( start_error.code() != eTransportErrorCode::ResourceExhausted )
+                        {
+                            this->close();
+                        }
+                        return TransferResult<std::vector<std::uint8_t>>( std::move( received ), start_error );
+                    }
+                }
+                const TransportError wait_error = this->waitForRead( deadline, context_in.cancellation() );
+                if ( !wait_error.ok() )
+                {
+                    auto received = this->takeReadBytes( maximum_size_in );
+                    if ( wait_error.category() == eTransportErrorCategory::InputOutput )
+                    {
+                        this->close();
+                    }
+                    return TransferResult<std::vector<std::uint8_t>>( std::move( received ), wait_error );
+                }
+            }
+        }
+        catch ( const std::bad_alloc& )
+        {
+            return TransferResult<std::vector<std::uint8_t>>( {},
+                serialError( eTransportErrorCode::ResourceExhausted, "Allocating the serial receive buffer failed.", 0 ) );
+        }
+    }
+#endif
+
     void close() noexcept
     {
 #if defined( _WIN32 )
         if ( this->handle != INVALID_HANDLE_VALUE )
         {
-            CancelIoEx( this->handle, nullptr );
+            this->cancelRead();
             CloseHandle( this->handle );
             this->handle = INVALID_HANDLE_VALUE;
         }
+        if ( this->m_read_operation.hEvent != nullptr )
+        {
+            CloseHandle( this->m_read_operation.hEvent );
+        }
+        this->m_read_operation = {};
+        this->m_read_buffer.clear();
+        this->m_read_size = 0;
+        this->m_read_offset = 0;
+        this->m_is_read_pending = false;
 #else
         if ( this->descriptor >= 0 )
         {
@@ -452,6 +691,9 @@ TransportStatus SerialPort::open(
     settings.fDsrSensitivity = FALSE;
     settings.fOutX = FALSE;
     settings.fInX = FALSE;
+    settings.fNull = FALSE;
+    settings.fErrorChar = FALSE;
+    settings.fAbortOnError = FALSE;
     settings.fRtsControl = RTS_CONTROL_DISABLE;
     settings.fDtrControl = DTR_CONTROL_ENABLE;
     if ( SetCommState( candidate, &settings ) == FALSE ||
@@ -675,20 +917,20 @@ TransferResult<std::size_t> SerialPort::send(
                     serialError( eTransportErrorCode::SendFailed,
                                  "Sending serial data failed.", code ) );
             }
-            const TransportError wait_error = waitForOverlapped(
+            PendingWriteGuard pending( &operation, this->m_impl->handle );
+            const auto completed = waitForOverlapped(
                 &operation, this->m_impl->handle, deadline, context_in.cancellation() );
-            if ( !wait_error.ok() )
+            pending.markCollected();
+            sent_total += ( std::min )( completed.value(), size_in - sent_total );
+            if ( !completed.succeeded() )
             {
-                return TransferResult<std::size_t>( sent_total, wait_error );
+                if ( completed.error().category() == eTransportErrorCategory::InputOutput )
+                {
+                    this->m_impl->close();
+                }
+                return TransferResult<std::size_t>( sent_total, completed.error() );
             }
-            if ( GetOverlappedResult( this->m_impl->handle, &operation, &sent, FALSE ) == FALSE )
-            {
-                const DWORD result_code = GetLastError();
-                this->m_impl->close();
-                return TransferResult<std::size_t>( sent_total,
-                    serialError( eTransportErrorCode::SendFailed,
-                                 "Completing serial send failed.", result_code ) );
-            }
+            continue;
         }
         sent_total += static_cast<std::size_t>( sent );
 #else
@@ -736,7 +978,7 @@ TransferResult<std::vector<std::uint8_t>> SerialPort::receive(
     , const OperationContext& context_in
 )
 {
-    // Validate state and allocate the complete caller-requested capacity.
+    // Validate state and the returned chunk limit before starting native I/O.
     if ( this->m_impl == nullptr || !this->isOpen() )
     {
         return TransferResult<std::vector<std::uint8_t>>(
@@ -751,6 +993,9 @@ TransferResult<std::vector<std::uint8_t>> SerialPort::receive(
             {}, validationError( "Receive size and timeout must be valid." ) );
     }
 
+#if defined( _WIN32 )
+    return this->m_impl->receiveWindows( maximum_size_in, context_in );
+#else
     std::vector<std::uint8_t> received;
     try
     {
@@ -775,52 +1020,6 @@ TransferResult<std::vector<std::uint8_t>> SerialPort::receive(
         {
             return TransferResult<std::vector<std::uint8_t>>( {}, timeoutError() );
         }
-#if defined( _WIN32 )
-        NativeEvent event;
-        if ( event.get() == nullptr )
-        {
-            return TransferResult<std::vector<std::uint8_t>>(
-                {}, serialError( eTransportErrorCode::ResourceExhausted,
-                                 "Creating a serial I/O event failed.", GetLastError() ) );
-        }
-        OVERLAPPED operation = {};
-        operation.hEvent = event.get();
-        DWORD received_size = 0;
-        const BOOL started = ReadFile( this->m_impl->handle, received.data(),
-                                       static_cast<DWORD>( maximum_size_in ),
-                                       &received_size, &operation );
-        if ( started == FALSE )
-        {
-            const DWORD code = GetLastError();
-            if ( code != ERROR_IO_PENDING )
-            {
-                this->m_impl->close();
-                return TransferResult<std::vector<std::uint8_t>>(
-                    {}, serialError( eTransportErrorCode::ReceiveFailed,
-                                     "Receiving serial data failed.", code ) );
-            }
-            const TransportError wait_error = waitForOverlapped(
-                &operation, this->m_impl->handle, deadline, context_in.cancellation() );
-            if ( !wait_error.ok() )
-            {
-                return TransferResult<std::vector<std::uint8_t>>( {}, wait_error );
-            }
-            if ( GetOverlappedResult( this->m_impl->handle, &operation,
-                                      &received_size, FALSE ) == FALSE )
-            {
-                const DWORD result_code = GetLastError();
-                this->m_impl->close();
-                return TransferResult<std::vector<std::uint8_t>>(
-                    {}, serialError( eTransportErrorCode::ReceiveFailed,
-                                     "Completing serial receive failed.", result_code ) );
-            }
-        }
-        if ( received_size == 0 )
-        {
-            continue;
-        }
-        received.resize( static_cast<std::size_t>( received_size ) );
-#else
         const TransportError wait_error = waitForDescriptor(
             this->m_impl->descriptor, eSerialWait::Read, deadline,
             context_in.cancellation() );
@@ -851,9 +1050,9 @@ TransferResult<std::vector<std::uint8_t>> SerialPort::receive(
             continue;
         }
         received.resize( static_cast<std::size_t>( received_size ) );
-#endif
         return TransferResult<std::vector<std::uint8_t>>( std::move( received ) );
     }
+#endif
 }
 
 } // namespace xpt

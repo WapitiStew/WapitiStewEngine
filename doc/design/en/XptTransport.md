@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-01
 
 ## Purpose and scope
 
@@ -61,7 +61,7 @@ values as primary error identities. `nativeCode()` is diagnostic only; portable 
 | --- | --- |
 | TCP | [TcpClient.cpp](../../../platform/xpt/network/TcpClient.cpp): unique PIMPL owns socket, remote endpoint and effective local endpoint |
 | UDP | [UdpClient.cpp](../../../platform/xpt/network/UdpClient.cpp): unique PIMPL owns socket, its family and local endpoint |
-| Serial | [SerialPort.cpp](../../../platform/xpt/serial/SerialPort.cpp): unique PIMPL owns native port; operation-local overlapped state on Windows |
+| Serial | [SerialPort.cpp](../../../platform/xpt/serial/SerialPort.cpp): unique PIMPL owns native port and persistent Windows read storage; writes use operation-local overlapped state |
 | HTTP | [HttpClient.cpp](../../../platform/xpt/http/HttpClient.cpp): process curl runtime plus per-attempt handles/header list/response accumulator; no public native handle |
 | Cancellation | [Cancellation.cpp](../../../core/xpt/operation/Cancellation.cpp): source and tokens share one atomic boolean |
 | Retry decision | [RetryPolicy.cpp](../../../core/xpt/retry/RetryPolicy.cpp): pure policy calculation, no worker or resource owner |
@@ -227,17 +227,28 @@ cancellation/deadline before committing it. Until commit, the existing handle re
 usable after failure. Success closes the former handle and installs the candidate. This differs
 from TCP reconnect, which closes its former socket before resolution.
 
-Linux uses a nonblocking descriptor and poll against the operation deadline. Windows owns an
-event and OVERLAPPED state per pending transfer. On timeout/cancellation Windows calls `CancelIoEx`
-and waits for native completion before releasing the event, OVERLAPPED or buffer. That final wait
-uses `INFINITE`; a driver that delays cancellation can exceed the nominal deadline. Keeping native
-I/O memory alive takes precedence over returning while it is still in use.
+Linux uses a nonblocking descriptor and poll against the operation deadline. The Windows PIMPL
+owns the read event, OVERLAPPED and receive buffer across calls. A polling timeout leaves that native
+read pending; the next call collects the same operation. Native completion is checked before the
+poll deadline, so an already completed read can return data even with a zero remaining poll budget.
+The maximum size limits the returned chunk. A smaller next maximum preserves the unread suffix in
+the owner; consumed bytes are never returned twice. Empty native completions reuse the same call's
+deadline rather than extending its budget. Binary configuration clears null-byte filtering,
+error-character substitution and abort-on-error settings inherited from earlier port users.
 
-Send reports completed chunks; a pending cancelled write may already have affected the wire, so
-the returned count is not a rollback or peer-acceptance certificate. Receive returns an available
-prefix up to the maximum, including short replies. Native read/write failure paths can close the
-port, while timeout/cancellation preserve it; inspect the result and `isOpen()` before recovery.
-Raw transport operations never reopen a device or resend a command automatically.
+Cancellation and close cancel and collect an outstanding read before its storage is released.
+Completed bytes collected during cancellation remain meaningful in the returned TransferResult.
+Close, replacement and destruction end the stream and release any unread suffix after native I/O
+has finished. Moving the PIMPL retains pending-operation addresses and storage. All calls, moves and
+destruction remain caller-confined; this retention does not add a transport thread or callback.
+
+Each write retains its event, OVERLAPPED and borrowed input until native completion is collected,
+including exception unwinding. A deadline/cancellation race accounts for final native progress once;
+a fully completed write wins the race. A failed partial write reports its completed count without
+replaying any byte. That count is not a rollback or peer-acceptance certificate. Cancellation cleanup
+can wait beyond the nominal deadline when the native driver delays completion. Native I/O storage
+remains alive throughout that wait. Native read/write failures can close the port; inspect the result
+and `isOpen()` before recovery. Raw transport operations never reopen or resend automatically.
 
 ## Retry policy semantics
 
@@ -403,6 +414,7 @@ for each exception shape, ownership, compatibility and evidence limits. No bindi
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Own Windows reads across polling timeouts, retain unread prefixes, collect pending write progress, and specify cancellation/close storage lifetime. New regression source is prepared; execution remains a separate owner-authorized gate. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-10-15 | Accept positive int32 serial baud requests with exact OS readback; retain the 15 representative rates and distinguish virtual evidence from hardware validation. |
 | 2026-10-15 | Expand serial acceptance from 8 to 15 rates, including exact Linux 14400; specify virtual evidence and hardware limits. |

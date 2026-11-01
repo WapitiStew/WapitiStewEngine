@@ -1,7 +1,7 @@
 # WSE paired user and normative documentation manifest.
 # schema_version=1
 # id|canonical_english|japanese_translation|documentation_version|last_synchronized
-root-readme|README.md|README.ja.md|WSE 1.1.0|2026-10-15
+root-readme|README.md|README.ja.md|WSE 1.1.0|2026-11-01
 overview|doc/en/README.md|doc/ja/README.md|WSE 1.1.0|2026-10-15
 getting-started|doc/en/GettingStarted.md|doc/ja/GettingStarted.md|WSE 1.1.0|2026-10-15
 build-guide|doc/en/BuildGuide.md|doc/ja/BuildGuide.md|WSE 1.1.0|2026-10-15
@@ -27,7 +27,7 @@ security-privacy|doc/design/en/SecurityPrivacy.md|doc/design/ja/SecurityPrivacy.
 hardware-validation|doc/design/en/HardwareValidation.md|doc/design/ja/HardwareValidation.md|WSE 1.1.0|2026-10-15
 version-compatibility|doc/design/en/VersionCompatibility.md|doc/design/ja/VersionCompatibility.md|WSE 1.1.0|2026-10-15
 result-contract|doc/design/en/ResultContract.md|doc/design/ja/ResultContract.md|WSE 1.1.0|2026-10-15
-xpt-transport|doc/design/en/XptTransport.md|doc/design/ja/XptTransport.md|WSE 1.1.0|2026-10-15
+xpt-transport|doc/design/en/XptTransport.md|doc/design/ja/XptTransport.md|WSE 1.1.0|2026-11-01
 oui-renderer|doc/design/en/OuiRenderer.md|doc/design/ja/OuiRenderer.md|WSE 1.1.0|2026-10-15
 oui-projection|doc/design/en/OuiProjection.md|doc/design/ja/OuiProjection.md|WSE 1.1.0|2026-10-15
 tmr-camera|doc/design/en/TmrCamera.md|doc/design/ja/TmrCamera.md|WSE 1.1.0|2026-10-15

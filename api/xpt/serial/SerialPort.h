@@ -8,6 +8,7 @@
 //! @par     Return Code: LF
 //!
 //! @date
+//!   Nov-01, 2026   Retain Windows pending reads across polling deadlines and collect write progress.
 //!   Oct-15, 2026   Accept positive int32 baud requests with native readback verification.
 //!   Aug-26, 2026   Create New.
 //!
@@ -80,6 +81,8 @@ class WSE_API SerialPort final
     );
 
     //! \~japanese Portを閉じる. 複数回呼出可能. \~english Closes the port and is idempotent.
+    //! @details Windowsの保留Readを取消し・完了回収してからBuffer・Event・Portを解放する.
+    //!     Windows cancels and collects a pending read before releasing its storage and port.
     void close() noexcept;
 
     //! @return \~japanese Portを保持する場合true. \~english True while a port is held.
@@ -95,7 +98,8 @@ class WSE_API SerialPort final
     //! @param [in] data_in 送信Buffer. `size_in == 0`の場合nullptr可能.
     //! @param [in] size_in 送信Size [byte].
     //! @param [in] context_in 明示Timeout／Cancellation.
-    //! @return 送信済みSize [byte]とStructured Error.
+    //! @return 最後の保留Writeの回収分を含む送信済みSize [byte]とStructured Error.
+    //! @details Completed native progress is counted once even when cancellation races completion; no automatic replay occurs.
     TransferResult<std::size_t> send(
           const std::uint8_t*     data_in
         , const std::size_t       size_in
@@ -115,7 +119,13 @@ class WSE_API SerialPort final
     //! \~english  Receives one chunk up to the maximum size synchronously.
     //! @param [in] maximum_size_in 最大受信Size [byte]. 1以上`INT_MAX`以下.
     //! @param [in] context_in 明示Timeout／Cancellation.
-    //! @return 受信DataとStructured Error.
+    //! @return 受信DataとStructured Error. Errorとともに返る取得Prefixも一度だけ消費する.
+    //! @details WindowsのPoll TimeoutではOS Read・BufferをPort内へ保持し、次のPollで同じ完了を回収する.
+    //!     完了済みDataをDeadlineより先に確認し、返却上限が縮んだ場合の未返却Suffixも所有し続ける.
+    //!     Cancellation／closeは保留I/Oを回収する. Native cleanupは名目Timeoutを超え得る.
+    //!     On Windows a polling timeout retains the read, event and buffer in the port. A later call collects the
+    //!     same completion; a smaller maximum returns a prefix and retains the suffix. Collected data can be returned
+    //!     alongside an error. Cancellation and close collect native completion before releasing I/O storage.
     TransferResult<std::vector<std::uint8_t>> receive(
           const std::size_t       maximum_size_in
         , const OperationContext& context_in

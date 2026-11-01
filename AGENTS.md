@@ -57,6 +57,10 @@ For a normal public change, run the applicable configure/build and:
 ctest --test-dir <build-directory> [-C <configuration>] --output-on-failure
 ```
 
+An explicit owner instruction to pause tests overrides these normal gates. During a build-only
+stage, do not run CTest, unit/contract/documentation checks, loopbacks, smoke or hardware programs.
+Prepare their source and record every unrun gate; a build does not authorize test execution.
+
 The suite must retain public-header, public-API, deprecation-ledger, documentation, ownership,
 binding, package, and consumer gates. Package changes also require installation followed by the
 external consumer project under `test/consumer` against the modern `WSE::*` component targets.
@@ -103,5 +107,6 @@ change is incomplete until these gates and `git diff --check` pass.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Respect explicit build-only preparation and owner-paused automated validation without disabling the normal gates. |
 | 2026-10-15 | Record the owner-authorized 1.1.0 alignment and retain SemVer-major removal gates. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |
