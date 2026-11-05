@@ -349,7 +349,8 @@ if(WSE_EXPECT_CORE_ONLY OR WSE_EXPECT_GEF_ONLY OR WSE_EXPECT_IUI_ONLY
 endif()
 
 function(wse_add_consumer_test target_name)
-	add_executable(${target_name} main.cpp ApplicationLog.cpp ApplicationLogTest.cpp)
+    # Link the installed async symbols as well as the existing synchronous custom-tag path.
+    add_executable(${target_name} main.cpp ApplicationLog.cpp ApplicationLogTest.cpp AsyncLogTest.cpp)
 	target_link_libraries(${target_name} PRIVATE
 		${ARGN}
 	)

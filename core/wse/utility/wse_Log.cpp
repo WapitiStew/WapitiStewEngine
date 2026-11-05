@@ -74,6 +74,8 @@
 
 
 
+#include "LogTextConversion.h"
+
 #if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable: 4702)  // ../
@@ -85,48 +87,6 @@ namespace wse
     template class WSE_INSTANTIATION_API Logger<WSE_TAG>;
     template class WSE_INSTANTIATION_API Logger<WSE_DEV_TAG>;
 
-
-
-    static std::string wstring2UTF8(const std::wstring& wstr_in) 
-    {
-        if ( wstr_in.empty() ){  return std::string(); }
-
-    #if defined(_WIN32) || defined(_WIN64)
-        // Windows: WideCharToMultiByte を使う
-        int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr_in.c_str(), -1, nullptr, 0, nullptr, nullptr);
-        if (size_needed <= 0) { return ""; }
-
-        std::string str( static_cast< uint64_t >( size_needed ) - 1, 0);
-        WideCharToMultiByte(CP_UTF8, 0, wstr_in.c_str(), -1, &str[0], size_needed, nullptr, nullptr);
-        return str;
-
-    #else
-        // POSIX (Linux, macOS, Android, ChromeOS, iOS): iconv を使う
-        iconv_t conv = iconv_open("UTF-8", "WCHAR_T");
-        if (conv == (iconv_t)-1) { return ""; }
-
-        size_t in_size = wstr_in.size() * sizeof(wchar_t);
-        size_t out_size = in_size * 4; // UTF-8 文字は最大4バイト
-        char* out_buffer = new char[out_size];
-        char* out_ptr = out_buffer;
-        const char* in_ptr = reinterpret_cast<const char*>(wstr_in.c_str());
-
-        size_t in_bytes_left = in_size;
-        size_t out_bytes_left = out_size;
-
-        if (iconv(conv, const_cast<char**>(&in_ptr), &in_bytes_left, &out_ptr, &out_bytes_left) == (size_t)-1)
-        {
-            delete[] out_buffer;
-            iconv_close(conv);
-            return "";
-        }
-
-        std::string result(out_buffer, out_ptr - out_buffer);
-        delete[] out_buffer;
-        iconv_close(conv);
-        return result;
-    #endif
-    }
 
 
     struct sLogProfile
@@ -494,7 +454,7 @@ namespace wse
     //! @brief ビットシフトオペレーター.
     std::string ILogger::getMessageTip  ( const std::wstring& str_in, const std::string& tag_in )
     {
-        return getMessageTip( wstring2UTF8( str_in ), tag_in );
+        return getMessageTip( wstring2UTF8( str_in, true ), tag_in );
     }
 
     //! @brief ビットシフトオペレーター.
@@ -506,7 +466,7 @@ namespace wse
     //! @brief ビットシフトオペレーター.
     std::string ILogger::getMessageTip  ( const wchar_t* str_in, const std::string& tag_in )
     {
-        return getMessageTip( std::string( wstring2UTF8( std::wstring( str_in ) ) ), tag_in );
+        return getMessageTip( std::string( wstring2UTF8( std::wstring( str_in ), true ) ), tag_in );
     }
 
     //! @brief ログを登録する.

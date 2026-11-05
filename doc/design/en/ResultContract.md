@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 This document defines the current C++ Result/Status representation, access rules and component
 boundaries. The implementation is [wse_Result.h](../../../api/wse/utility/wse_Result.h).
@@ -39,13 +39,14 @@ exception boundary.
 ## Component errors and aliases
 
 `E` supplies `category()`, `code()`, `message()`, `nativeCode()` and `ok()`. Error categories follow
-the shared 12-value taxonomy. Category and component code are branching contracts; messages and
+the shared 12-value taxonomy unless the service defines its own taxonomy, as logging does below. Category and component code are branching contracts; messages and
 native codes are diagnostic. [Public API Policy](PublicApiPolicy.md) defines normalization rules.
 
 | Component | Error | Strict result / status |
 | --- | --- | --- |
 | Core computation | `wse::CoreError` | `CoreResult<T>` / `CoreStatus` |
 | License | `wse::LicenseError` | `LicenseResult<T>` / `LicenseStatus` |
+| Async logging | `wse::LogError` | `LogStatus` |
 | GEF | `wse::gef::GefError` | `GefResult<T>` / `GefStatus` |
 | XPT | `wse::xpt::TransportError` | `TransportResult<T>` / `TransportStatus` |
 | OUI | `wse::oui::RendererError` | `RendererResult<T>` / `RendererStatus` |
@@ -53,6 +54,9 @@ native codes are diagnostic. [Public API Policy](PublicApiPolicy.md) defines nor
 | Binding facade | `wse::binding::Error` | `binding::Result<T>` / `binding::Status` |
 
 These names are aliases of the common templates, not independent state machines.
+`LogStatus` is `Status<LogError>`; its service-specific `eLogErrorCategory` and `eLogErrorCode`
+distinguish configuration, capacity, I/O, callback, lifecycle and internal failures. See
+[Asynchronous Logging](AsyncLogging.md). These values do not alias transport or binding categories.
 IUI `KeyboardAccessState` is a separate component observation contract; it is not a strict Result.
 
 ## Partial progress
@@ -89,5 +93,6 @@ These tests do not establish exhaustive allocation-failure handling or physical-
 
 | Date | Change |
 | --- | --- |
+| 2026-11-05 | Register LogStatus and the portable asynchronous logging error taxonomy. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

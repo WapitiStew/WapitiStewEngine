@@ -9,7 +9,7 @@ setup|doc/en/SETUP.md|doc/ja/SETUP.md|WSE 1.1.0|2026-10-15
 pi-tools|tools/pi/README.md|tools/pi/README.ja.md|WSE 1.1.0|2026-10-15
 how-to|doc/en/HOWTO.md|doc/ja/HOWTO.md|WSE 1.1.0|2026-10-15
 cpp-how-to|doc/en/howto/cpp.md|doc/ja/howto/cpp.md|WSE 1.1.0|2026-10-15
-api-reference|doc/en/API_REFERENCE.md|doc/ja/API_REFERENCE.md|WSE 1.1.0|2026-10-15
+api-reference|doc/en/API_REFERENCE.md|doc/ja/API_REFERENCE.md|WSE 1.1.0|2026-11-05
 webcamera-migration|doc/en/WebCameraMigration.md|doc/ja/WebCameraMigration.md|WSE 1.1.0|2026-10-15
 license|doc/en/LICENSE.md|doc/ja/LICENSE.md|WSE 1.1.0|2026-10-15
 error-handling-cookbook|doc/en/ErrorHandlingCookbook.md|doc/ja/ErrorHandlingCookbook.md|WSE 1.1.0|2026-10-15
@@ -20,13 +20,13 @@ architecture|doc/design/en/Architecture.md|doc/design/ja/Architecture.md|WSE 1.1
 portable-core|doc/design/en/PortableCore.md|doc/design/ja/PortableCore.md|WSE 1.1.0|2026-10-15
 iui-keyboard|doc/design/en/IuiKeyboard.md|doc/design/ja/IuiKeyboard.md|WSE 1.1.0|2026-10-15
 coding-rule|doc/design/en/CodingRule.md|doc/design/ja/CodingRule.md|WSE 1.1.0|2026-10-15
-public-api-policy|doc/design/en/PublicApiPolicy.md|doc/design/ja/PublicApiPolicy.md|WSE 1.1.0|2026-10-15
-thread-ownership|doc/design/en/ThreadOwnership.md|doc/design/ja/ThreadOwnership.md|WSE 1.1.0|2026-10-15
+public-api-policy|doc/design/en/PublicApiPolicy.md|doc/design/ja/PublicApiPolicy.md|WSE 1.1.0|2026-11-05
+thread-ownership|doc/design/en/ThreadOwnership.md|doc/design/ja/ThreadOwnership.md|WSE 1.1.0|2026-11-05
 build-packaging|doc/design/en/BuildPackaging.md|doc/design/ja/BuildPackaging.md|WSE 1.1.0|2026-10-15
 security-privacy|doc/design/en/SecurityPrivacy.md|doc/design/ja/SecurityPrivacy.md|WSE 1.1.0|2026-10-15
 hardware-validation|doc/design/en/HardwareValidation.md|doc/design/ja/HardwareValidation.md|WSE 1.1.0|2026-10-15
 version-compatibility|doc/design/en/VersionCompatibility.md|doc/design/ja/VersionCompatibility.md|WSE 1.1.0|2026-10-15
-result-contract|doc/design/en/ResultContract.md|doc/design/ja/ResultContract.md|WSE 1.1.0|2026-10-15
+result-contract|doc/design/en/ResultContract.md|doc/design/ja/ResultContract.md|WSE 1.1.0|2026-11-05
 xpt-transport|doc/design/en/XptTransport.md|doc/design/ja/XptTransport.md|WSE 1.1.0|2026-11-01
 oui-renderer|doc/design/en/OuiRenderer.md|doc/design/ja/OuiRenderer.md|WSE 1.1.0|2026-10-15
 oui-projection|doc/design/en/OuiProjection.md|doc/design/ja/OuiProjection.md|WSE 1.1.0|2026-10-15
@@ -37,7 +37,8 @@ documentation-generation|doc/design/en/DocumentationGeneration.md|doc/design/ja/
 doxygen-user|doxy/pages/user.en.md|doxy/pages/user.ja.md|WSE 1.1.0|2026-10-15
 core-data-model|doc/design/en/CoreDataModel.md|doc/design/ja/CoreDataModel.md|WSE 1.1.0|2026-10-15
 gef-file-formats|doc/design/en/GefFileFormats.md|doc/design/ja/GefFileFormats.md|WSE 1.1.0|2026-10-15
-design-verification|doc/design/en/DesignVerification.md|doc/design/ja/DesignVerification.md|WSE 1.1.0|2026-10-15
+design-verification|doc/design/en/DesignVerification.md|doc/design/ja/DesignVerification.md|WSE 1.1.0|2026-11-05
 developer-walkthrough|doc/design/en/DeveloperWalkthrough.md|doc/design/ja/DeveloperWalkthrough.md|WSE 1.1.0|2026-10-15
 core-algorithms|doc/design/en/CoreAlgorithms.md|doc/design/ja/CoreAlgorithms.md|WSE 1.1.0|2026-10-15
-core-services|doc/design/en/CoreServices.md|doc/design/ja/CoreServices.md|WSE 1.1.0|2026-10-15
+core-services|doc/design/en/CoreServices.md|doc/design/ja/CoreServices.md|WSE 1.1.0|2026-11-05
+async-logging|doc/design/en/AsyncLogging.md|doc/design/ja/AsyncLogging.md|WSE 1.1.0|2026-11-05

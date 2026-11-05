@@ -96,8 +96,11 @@ set(WSE_CORE_SOURCES
 	core/wse/license/wse_LicenseKey.cpp
 	core/wse/license/wse_LicenseWriter.cpp
 	core/wse/error/CoreError.cpp
+	core/wse/error/LogError.cpp
 	core/wse/error/LicenseError.cpp
 	core/wse/utility/wse_DataCast.cpp
+	core/wse/utility/AsyncLogRuntime.cpp
+	core/wse/utility/LogMessageBuilder.cpp
 	core/wse/utility/wse_Log.cpp
 	core/wse/utility/wse_Timer.cpp
 	core/wse/utility/wse_Wait.cpp

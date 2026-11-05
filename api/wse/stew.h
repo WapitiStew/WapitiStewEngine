@@ -55,6 +55,8 @@
 
 // Utility.
 #include "utility/wse_Log.h"
+#include "utility/AsyncLogRuntime.h"
+#include "utility/LogMessageBuilder.h"
 #include "utility/wse_Math.h"
 #include "utility/wse_PixelFormat.h"
 #include "utility/wse_StringTool.h"

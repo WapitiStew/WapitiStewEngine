@@ -43,6 +43,8 @@ Tmr details camera selection, callback states and frame layout; OUI covers resou
 - [Core演算設計（日本語）](design/ja/CoreAlgorithms.md)
 - [Core services (English)](design/en/CoreServices.md)
 - [Core共通サービス設計（日本語）](design/ja/CoreServices.md)
+- [Asynchronous logging (English)](design/en/AsyncLogging.md)
+- [非同期Log（日本語）](design/ja/AsyncLogging.md)
 - [GEF file formats (English)](design/en/GefFileFormats.md)
 - [GEF File形式（日本語）](design/ja/GefFileFormats.md)
 - [Design verification (English)](design/en/DesignVerification.md)

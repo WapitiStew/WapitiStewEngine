@@ -2,7 +2,7 @@
 
 > Canonical source: [English Result and Status Contract](../en/ResultContract.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 本書は現在のC++ Result／Statusの表現、Accessor規則、Component境界を定義します。
 実装は[wse_Result.h](../../../api/wse/utility/wse_Result.h)です。
@@ -37,13 +37,14 @@ Result、Status、`succeeded()`は`[[nodiscard]]`です。
 ## Component Errorと別名
 
 `E`は`category()`、`code()`、`message()`、`nativeCode()`、`ok()`を提供します。
-Categoryは共通の12値分類に従います。分岐契約はCategoryとComponent Codeで、MessageとNative Codeは
+CategoryはLogなどでService専用分類を定める場合を除き、共通の12値分類に従います。分岐契約はCategoryとComponent Codeで、MessageとNative Codeは
 診断用です。正規化規則は[公開API Policy](PublicApiPolicy.md)に従います。
 
 | Component | Error | 厳密Result／Status |
 | --- | --- | --- |
 | Core計算 | `wse::CoreError` | `CoreResult<T>`／`CoreStatus` |
 | License | `wse::LicenseError` | `LicenseResult<T>`／`LicenseStatus` |
+| 非同期Log | `wse::LogError` | `LogStatus` |
 | GEF | `wse::gef::GefError` | `GefResult<T>`／`GefStatus` |
 | XPT | `wse::xpt::TransportError` | `TransportResult<T>`／`TransportStatus` |
 | OUI | `wse::oui::RendererError` | `RendererResult<T>`／`RendererStatus` |
@@ -51,6 +52,9 @@ Categoryは共通の12値分類に従います。分岐契約はCategoryとCompo
 | Binding Facade | `wse::binding::Error` | `binding::Result<T>`／`binding::Status` |
 
 これらは共通Templateの別名で、独立した状態機械ではありません。
+`LogStatus`は`Status<LogError>`です。専用の`eLogErrorCategory`と`eLogErrorCode`で設定・容量・
+I/O・Callback・Lifecycle・内部失敗を区別します。[非同期Log](AsyncLogging.md)を参照してください。
+これらをTransportやBindingのCategoryの別名として扱いません。
 IUIの`KeyboardAccessState`はComponentの観測状態であり、厳密Resultではありません。
 
 ## 部分進捗
@@ -87,5 +91,6 @@ Const参照でResultを届ける非同期APIでは、その参照をCallback中�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-05 | LogStatusとPortableな非同期Log Error分類を登録。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

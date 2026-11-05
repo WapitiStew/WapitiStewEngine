@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 ## Purpose
 
@@ -31,6 +31,12 @@ They do not require a Result wrapper or automatic bounds checks.
 ## Logging
 
 `formatLogMessage()` reuses the standard Logger tag, timestamp, filename and line layout without dispatching to any sink. Caller-owned asynchronous loggers may use this formatting entry point; their output failures remain the caller's responsibility.
+
+`AsyncLogRuntime` provides an opt-in bounded writer and portable `LogStatus` diagnostics.
+Its owned records, typed body controls, per-runtime filters and completion barriers are defined
+in [Asynchronous Logging](AsyncLogging.md). It does not replace the synchronous registry or
+silently create a global worker. Application tag, verbosity, presentation and shutdown policy
+stay outside the SDK. A frontend can provide its own serialized console callback.
 
 
 - Library code does not emit diagnostics directly through `std::cout`, `std::cerr`, `printf`, or a
@@ -133,5 +139,6 @@ removal floor, migration documentation, and removal gate.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-05 | Add the explicitly owned asynchronous logging boundary without changing synchronous logging. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

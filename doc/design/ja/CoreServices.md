@@ -2,7 +2,7 @@
 
 > Canonical source: [English Core Services](../en/CoreServices.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 ## 対象と所有関係
 
@@ -28,6 +28,7 @@ Log／Licenseの共有状態はLinkされたWSE Library Instanceに属します�
 | Wait | [Wait](../../../api/wse/utility/wse_Wait.h) | [Runtime契約](../../../test/characterization/core_runtime_contract.cpp) |
 | Timer | [Timer](../../../api/wse/utility/wse_Timer.h) | [Timer実装](../../../core/wse/utility/wse_Timer.cpp)、[Worker](../../../core/wse/utility/wse_WorkerController.cpp)、Runtime契約 |
 | Log | [Log](../../../api/wse/utility/wse_Log.h) | [Log実装](../../../core/wse/utility/wse_Log.cpp)、Runtime契約 |
+| 明示的な非同期Log | [AsyncLogRuntime](../../../api/wse/utility/AsyncLogRuntime.h) | [非同期Log設計](AsyncLogging.md)、所有する有限QueueとWriter |
 | License | [License](../../../api/wse/license/wse_License.h)、[Key](../../../api/wse/license/wse_LicenseKey.h)、[Writer](../../../api/wse/license/wse_LicenseWriter.h) | [Loader](../../../core/wse/license/wse_License.cpp)、[State](../../../core/wse/license/wse_LicenceAdmin.cpp)、[License契約](../../../test/characterization/license_contract.cpp) |
 | Device照会 | [Portable Core](PortableCore.md) | Platform AdapterとRuntime契約のLinux分岐 |
 
@@ -88,8 +89,12 @@ Callback内から`stop`やInterval変更は可能です。自身のTimerの破�
 
 ## Logの構築と配送: CORE-SVC-03
 
-Logは書込元Threadで同期実行します。Registry／設定はState Mutex、Console／File出力は別のOutput Mutexで
+既存`Logger<Tag>`と`writeLog()`は書込元Threadで同期実行します。Registry／設定はState Mutex、Console／File出力は別のOutput Mutexで
 守り、Custom Sinkは両方の外で呼びます。暗黙のLog Worker、配送Queue、滞留Bufferはありません。
+
+Applicationは独立した[非同期Log Runtime](AsyncLogging.md)を明示生成できます。
+そのRuntimeが有限Queue・Writer・Filter・出力Lifecycleを所有します。
+同期入口、Global Registry、既存`flushLog()`の意味は変更しません。
 
 ```text
 writeLog(level, tag, source, message, details)
@@ -198,5 +203,6 @@ Licenseは共有状態を確定するため、専用Processが必要です。Tim
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-05 | 既存同期Logと、明示Ownerを持つ非同期Runtimeの責務を区別。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

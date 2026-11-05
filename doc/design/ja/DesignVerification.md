@@ -2,7 +2,7 @@
 
 > Canonical source: [English Design Verification](../en/DesignVerification.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 ## 目的と読み方
 
@@ -34,6 +34,7 @@ CTest登録は[WseTests.cmake](../../../cmake/WseTests.cmake)にあります。
 | CORE-ALG-06: Bayer／色の式 | [Core演算](CoreAlgorithms.md) | `wse.core.image_algorithms`、`wse.tmr.camera_frame_ops` | Core固定値はTmr不要。Camera形式はTmr有効時。画質認証ではない |
 | CORE-SVC-01/02: Wait・Timer | [Coreサービス](CoreServices.md) | `wse.core.runtime_contract`、`wse.core.worker_controller` | Interval更新時点と終了後待機の順序はSource Reviewも必要。Real-time保証ではない |
 | CORE-SVC-03/04: Log配送・Sink | [Coreサービス](CoreServices.md) | `wse.core.runtime_contract` | Filter・自己解除・再入・例外。並行解除の網羅検証ではない |
+| CORE-LOG-01〜05: 明示的な非同期Log | [非同期Log](AsyncLogging.md) | `wse.core.async_log_contract`、`wse.core.async_log_concurrency_contract` | 所有Record・独立Filter・容量・型付き制御・失敗・並行Barrier・Capture解放。永続化・Real-time保証ではない |
 | CORE-SVC-05: License状態 | [Coreサービス](CoreServices.md) | `wse.core.license_contract` | Free FallbackはHeader／Source Review。任意File・Device Identityの検証ではない |
 | CORE-SVC-06: Device照会 | [Coreサービス](CoreServices.md) | `wse.core.runtime_contract`のLinux分岐 | Metadata列挙。実機受入ではない |
 | GEF-BIN-01: Byte列 | [GEF](GefFileFormats.md) | `wse.gef.bin_contract` | 固定Byte、切詰め、未知Tag。Big Endian認証ではない |
@@ -149,5 +150,6 @@ SkipをHardware成功へ変えてはいけません。
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-05 | 非同期Logの明示所有・型付き本文・完了契約をCore Testへ対応付け。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

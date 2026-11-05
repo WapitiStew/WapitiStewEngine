@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 ## Ownership
 
@@ -41,6 +41,7 @@ See [Language Bindings](LanguageBindings.md) and [C ABI](CAbiContract.md) for li
 | Keyboard `clearCallback()` | An acquired callable can still run | Prevents later acquisition; not an in-flight barrier; snapshot observers and clear are allowed inside callback |
 | Keyboard owner-thread destruction | Waits for worker/callback | Callback must not destroy or assign the same Keyboard |
 | Log sink unregistration | An acquired registry snapshot can still invoke it | No completion barrier; shared snapshot retains the sink; producer threads may call concurrently |
+| AsyncLogRuntime owner-thread `stop()` | Drains accepted records and joins the writer | No later callback after return; same-runtime callback control/submission re-entry is rejected |
 | CameraSession owner-thread `stop()`/`close()` | Waits for current read, serializes native stop, then joins outside backend lock | Successful stop retains open session; failed native cleanup may close it; close ends session |
 | Camera callback `stop()` | Current invocation continues; serializes native stop with owner | Thread-local self identification defers join; next owner-thread stop/start/close reaps worker |
 | Managed terminal release | Runtime-specific | Follow LanguageBindings; session close and terminal release are distinct |
@@ -93,6 +94,11 @@ For `WebCamera`, `Close()` ends only the device session and permits reopening th
 the corresponding session-close and terminal-release operations in each language.
 
 Detailed Timer scheduling and Log sink re-entry are defined in [Core Services](CoreServices.md).
+The opt-in [asynchronous log runtime](AsyncLogging.md) has a separate owned queue, writer,
+formatter and sink lifetime. It starts no worker at construction, invokes callbacks outside
+its queue lock and requires borrowed captures to remain alive through stop completion.
+Its flush barrier covers prior accepted records; it does not stop producers or join unrelated
+synchronous logging calls. A callback that never returns can prevent its owner-side stop.
 Camera callback delivery and backend streaming are separate states: a terminal read error or a
 throwing callback can end delivery while `isStreaming()` remains true. Owner-side stop/reap is
 required before restart. Renderer handles carry a backend-lifetime generation: move transfers it,
@@ -124,5 +130,6 @@ last-lease destruction are serialized, while the disconnected pending-request li
 
 | Date | Change |
 | --- | --- |
+| 2026-11-05 | Add explicit async-log writer ownership, completion and callback re-entry requirements. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

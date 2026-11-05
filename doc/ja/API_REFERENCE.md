@@ -2,7 +2,7 @@
 
 > Canonical source: [English Public API Reference](../en/API_REFERENCE.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 本書はInstall Packageの`include/wse/api`配下に含まれる公開Headerを対象とした操作仕様です。実装詳細、
 機種依存Extensionおよび公開Packageに含まれないComponentは扱いません。
@@ -67,6 +67,21 @@ GEFに`ReadLimits`、`readWithLimits`、CSVの`readReplace`、両Controllerの`w
 - `wse::registDefaultLog()` で既定ログを登録
 - 出力: `WLog()` / `DLog()`、設定変更: `changeDefaultLog(...)` / `changeDevelopLog(...)`
 - ログ出力先は `eLogMode`（`CONSOLE`/`LOG_FILE`/`FULL`）で制御
+
+明示的な非同期出力には`<wse/utility/AsyncLogRuntime.h>`と
+`<wse/utility/LogMessageBuilder.h>`をIncludeし、`WSE::Core`へLinkします。
+`AsyncLogRuntime`は`configure(settings)`成功までWorkerを起動せず、有限QueueとWriterを1本所有します。
+Runtime別のTag／Verbosity／重大度Filter、UTF-8 File、Console Callback、Custom Sink、`LogStatus`診断を使えます。
+`tryAppend(record)`は所有値をCopyし、Caller上でFormatter／Sink I/Oを行いません。
+`flush()`は受理済みRecordのBarrier、`stop()`は排出・Joinです。
+
+`LogMessageBuilder`と`AsyncLogLine`はWSEの値変換を使い、先頭を含む各通常値へ設定Separatorを前置します。
+専用の非Template `operator<<(eLogControl::NewLine)`はSeparatorなしで型付き改行を追加し、
+Record分割・Flushは行いません。次の通常値には従来どおりSeparatorを付けます。
+`renderLogParts()`はText内CR／LF／NULを可視化し、明示制御と任意入力文字列を区別します。
+
+既存`Logger<Tag>`・`writeLog`・Global Filter・`flushLog`は同期契約を維持し、Async設定で迂回配送しません。
+Owner、Callback再入、容量、失敗、再設定、終了の条件は[非同期Log](../design/ja/AsyncLogging.md)を参照してください。
 
 ### 例外 / エラー
 
@@ -381,6 +396,7 @@ BytesTransferred、ReceivedData、SourceEndpointはManaged値で、Disposeは不
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-05 | Opt-in非同期Log Runtime、型付き本文Builder、完了契約を追加。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-10-15 | 正のint32の任意Baud要求、OS読戻し完全一致と代表15種類の検証を記載。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 ## Purpose and interpretation
 
@@ -37,6 +37,7 @@ On narrow screens, scroll the table horizontally to read all four columns.
 | CORE-ALG-06: Bayer/color formulas | [Core Algorithms](CoreAlgorithms.md) | `wse.core.image_algorithms`, `wse.tmr.camera_frame_ops` | Core vectors without Tmr; camera format coverage only with Tmr; not image-quality certification |
 | CORE-SVC-01/02: waits and Timer | [Core Services](CoreServices.md) | `wse.core.runtime_contract`, `wse.core.worker_controller` | Interval-update timing and fixed-delay sequencing also require source review; not real-time bounds |
 | CORE-SVC-03/04: Log dispatch and sinks | [Core Services](CoreServices.md) | `wse.core.runtime_contract` | Filter, self-removal, re-entry and exceptions; no exhaustive concurrent-unregister coverage |
+| CORE-LOG-01 through CORE-LOG-05: explicit async logging | [Asynchronous Logging](AsyncLogging.md) | `wse.core.async_log_contract`, `wse.core.async_log_concurrency_contract` | Owned records, independent filters, bounds, typed controls, failures, concurrent barriers and capture release; no durable-storage or real-time guarantee |
 | CORE-SVC-05: license state | [Core Services](CoreServices.md) | `wse.core.license_contract` | Free fallback from header/source review; not arbitrary-file or device-identity validation |
 | CORE-SVC-06: device queries | [Core Services](CoreServices.md) | Linux branch of `wse.core.runtime_contract` | Metadata enumeration, not physical-device acceptance |
 | GEF-BIN-01: wire bytes | [GEF](GefFileFormats.md) | `wse.gef.bin_contract` | Literal bytes, truncation and unknown tag; no big-endian certification |
@@ -165,5 +166,6 @@ that every implementation limitation has been repaired.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-05 | Map explicit async-log ownership, typed body and completion contracts to the Core test. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

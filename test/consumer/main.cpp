@@ -10,6 +10,7 @@
 
 #include <wse/stew.h>
 #include "ApplicationLog.h"
+#include "AsyncLogTest.h"
 #include "../support/FastIndexingContract.h"
 
 #include <cstdint>
@@ -54,6 +55,7 @@
 int main()
 {
 	if (!consumer::verifyApplicationLog()) { return 91; }
+    if( !consumer::verifyAsyncLog() ) { return 92; }
 	try { wse_test::verifyFastIndexing(); }
 	catch (const std::exception&) { return 90; }
 	const wse::LogLevel originalLevel = wse::minimumLogLevel();

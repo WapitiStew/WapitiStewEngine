@@ -2,7 +2,7 @@
 
 > Canonical source: [English Public API Policy](../en/PublicApiPolicy.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 ## 目的
 
@@ -31,6 +31,11 @@ Resultへの置換や自動的な境界検査は要求しません。
 ## Logging
 
 `formatLogMessage()`は標準LoggerのTAG・日時・ファイル名・行番号の書式を共有し、Sinkへ配送しない。呼出し側所有の非同期Loggerから使用でき、出力失敗は呼出し側が管理する。
+
+`AsyncLogRuntime`はOpt-inの有限WriterとPortableな`LogStatus`診断を提供します。
+所有Record、型付き本文制御、Runtime別Filter、完了Barrierは[非同期Log](AsyncLogging.md)で定義します。
+同期Registryを置換せず、Global Workerを暗黙起動しません。Tag・Verbosity・表示・終了のApplication方針は
+SDKの外に置きます。Frontendは自身で直列化するConsole Callbackを渡せます。
 
 
 - Library実装は`std::cout`、`std::cerr`、`printf`またはPlatform debug outputへ直接診断を出しません。
@@ -121,5 +126,6 @@ Removal Gateが無い変更を拒否します。
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-05 | 同期Logを変更せず、明示Ownerの非同期Log境界を追加。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

@@ -2,7 +2,7 @@
 
 > Canonical source: [English Thread and Ownership Model](../en/ThreadOwnership.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 ## Ownership
 
@@ -34,6 +34,7 @@ Callbackではなく所有Callableを保持します。解除・停止・破棄�
 | Keyboard `clearCallback()` | 取得済みCallableは実行されうる | 以後の取得を止めるが完了待機ではない。Callback内のSnapshot参照・Clearは可能 |
 | KeyboardのOwner Threadからの破棄 | Worker／Callbackを待つ | Callback内で同一Keyboardを破棄・代入してはいけない |
 | Log Sink解除 | 取得済みRegistry Snapshotから呼ばれうる | 完了待機ではない。共有SnapshotがSinkを保持し、Producer Threadからの並行呼出がありうる |
+| AsyncLogRuntimeのOwner Thread `stop()` | 受理済みRecordを排出しWriterをJoin | 復帰後のCallbackなし。同じRuntimeのCallbackからの制御・投入再入は拒否 |
 | CameraSessionのOwner Thread `stop()`／`close()` | 進行中Readを待ち、Native stopを直列化後、Backend lock外でJoin | 正常StopはOpenを維持。Native後始末失敗ならCloseされる場合があり、CloseはSessionを終了 |
 | CameraのCallback内`stop()` | 現在の呼出しは継続し、OwnerとNative stopを直列化 | Thread-local識別で自己Joinを延期。次のOwner Thread Stop／Start／CloseでJoin |
 | Managed終端解放 | Runtimeによる | LanguageBindingsに従う。Session Closeと終端解放を区別 |
@@ -82,6 +83,10 @@ Exampleは`using`または明示的な`Dispose()`で解放します。Disposeは
 [多言語Binding](LanguageBindings.md)契約を参照してください。
 
 Timer周期とLog Sink再入の詳細は[Core共通サービス設計](CoreServices.md)で定義します。
+Opt-inの[非同期Log Runtime](AsyncLogging.md)は独立したQueue・Writer・Formatter・Sink寿命を所有します。
+構築だけではWorkerを起動せず、Queue Lockの外でCallbackを呼び、借用CaptureをStop完了まで保持する必要があります。
+Flush Barrierは先行する受理済みRecordを対象とし、Producer停止や別の同期Log呼出しのJoinではありません。
+戻らないCallbackはOwner側のStopを妨げます。
 CameraのCallback配信とBackend streamingは別状態です。終端Read errorやCallback例外で配信終了しても
 `isStreaming()`はtrueになり得るため、再開前にOwner側でStop／回収します。Renderer HandleはBackend寿命の世代を持ち、
 Moveで移譲します。Shutdown／再初期化後と別Instanceでは別世代を使います。世代予約はAtomicですが、
@@ -108,5 +113,6 @@ libcameraの列挙とSessionは1つのWSE Runtime内でManager Leaseを共有し
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-05 | 非同期Log Writerの明示所有、完了、Callback再入条件を追加。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

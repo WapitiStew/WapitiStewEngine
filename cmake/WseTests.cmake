@@ -328,6 +328,19 @@ if(WSE_BUILD_TESTING)
 		WSE::Core
 	)
 	set_tests_properties(wse.core.runtime_contract PROPERTIES TIMEOUT 5)
+	# Explicit asynchronous ownership, overload compatibility and controlled output-failure recovery.
+	wse_add_characterization_test(
+		wse.core.async_log_contract
+		test/characterization/async_log_contract.cpp
+		WSE::Core
+	)
+	set_tests_properties(wse.core.async_log_contract PROPERTIES TIMEOUT 20)
+	wse_add_characterization_test(
+		wse.core.async_log_concurrency_contract
+		test/characterization/async_log_concurrency_contract.cpp
+		WSE::Core
+	)
+	set_tests_properties(wse.core.async_log_concurrency_contract PROPERTIES TIMEOUT 30)
 	# Pins the channel order wse::Image presents, which a Consumer indexes into directly.
 	wse_add_characterization_test(
 		wse.core.image_channel_order

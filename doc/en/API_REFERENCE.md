@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 This reference covers headers installed under `include/wse/api` and the optional installed language
 bindings. Implementation details, device-specific extensions, and components absent from the public
@@ -62,6 +62,26 @@ Use bounded reads for external input and atomic replacement to retain the origin
 
 Only targets enabled in the package manifest exist. Shared/static linkage and component selection are
 defined by the [Build and Install Guide](BuildGuide.md).
+
+## Explicit asynchronous logging (Core)
+
+Include `<wse/utility/AsyncLogRuntime.h>` and `<wse/utility/LogMessageBuilder.h>` and link
+`WSE::Core`. `AsyncLogRuntime` starts no worker until a successful `configure(settings)`.
+It owns a bounded queue and one writer, with per-runtime tag/verbosity/severity filtering,
+UTF-8 file output, an optional serialized console callback, custom sinks and `LogStatus`
+diagnostics. `tryAppend(record)` copies accepted values and performs no formatter or sink I/O
+on the caller; `flush()` is an accepted-record barrier and `stop()` drains and joins.
+
+`LogMessageBuilder` and `AsyncLogLine` use WSE value conversion and prepend the configured
+separator to every ordinary value, including the first. The non-template
+`operator<<(eLogControl::NewLine)` inserts a typed newline without a separator, record split
+or flush; the next ordinary value receives its normal separator. Text CR/LF/NUL remain
+visible escapes in `renderLogParts()`, so explicit controls and untrusted strings differ.
+
+Existing `Logger<Tag>`, `writeLog`, global filters and `flushLog` keep their synchronous
+contracts. Async configuration does not redirect those logs. See
+[Asynchronous Logging](../design/en/AsyncLogging.md) for ownership, callback re-entry,
+capacity, failure, reconfiguration and shutdown requirements.
 
 ## Portable transport (XPT)
 
@@ -249,6 +269,7 @@ See [C ABI partial transfer](../design/en/CAbiContract.md) for guarantees and li
 
 | Date | Change |
 | --- | --- |
+| 2026-11-05 | Add the opt-in async logging runtime, typed body builder and completion contract. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-10-15 | Document arbitrary positive int32 baud requests, exact OS readback and the 15 representative rates. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

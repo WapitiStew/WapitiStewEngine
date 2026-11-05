@@ -144,6 +144,7 @@ foreach(wse_baseline_path IN LISTS wse_legacy_error_baseline_paths)
 endforeach()
 
 foreach(wse_error_header IN ITEMS
+		"${WSE_API_ROOT}/wse/error/LogError.h"
 		"${WSE_API_ROOT}/wse/binding/Error.h"
 		"${WSE_API_ROOT}/xpt/error/TransportError.h"
 		"${WSE_API_ROOT}/oui/renderer/RendererError.h"
@@ -163,6 +164,7 @@ foreach(wse_implementation_source IN LISTS wse_implementation_sources)
 			OR wse_source_normalized MATCHES "/tmr/(spec|device/params|device/stream)/"
 			OR wse_source_normalized MATCHES "/tmr/win/(extern|device/stream)/"
 			OR wse_source_normalized MATCHES "/wse/utility/wse_Log\\.cpp$"
+			OR wse_source_normalized MATCHES "/wse/utility/AsyncLogRuntime\\.cpp$"
 			OR wse_source_normalized MATCHES "/wse/(win|linux)/utility/wse_LogOutput\\.(cpp|h)$")
 		continue()
 	endif()

@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-05
 
 ## Scope and ownership map
 
@@ -28,6 +28,7 @@ Separate copies of a static library in different modules are not a cross-module 
 | Wait | [Wait](../../../api/wse/utility/wse_Wait.h) | [runtime contract](../../../test/characterization/core_runtime_contract.cpp) |
 | Timer | [Timer](../../../api/wse/utility/wse_Timer.h) | [Timer implementation](../../../core/wse/utility/wse_Timer.cpp), [worker](../../../core/wse/utility/wse_WorkerController.cpp), runtime contract |
 | Logging | [Log](../../../api/wse/utility/wse_Log.h) | [Log implementation](../../../core/wse/utility/wse_Log.cpp), runtime contract |
+| Explicit async logging | [AsyncLogRuntime](../../../api/wse/utility/AsyncLogRuntime.h) | [Async logging design](AsyncLogging.md), owned bounded queue and writer |
 | License | [License](../../../api/wse/license/wse_License.h), [key](../../../api/wse/license/wse_LicenseKey.h), [writer](../../../api/wse/license/wse_LicenseWriter.h) | [loader](../../../core/wse/license/wse_License.cpp), [state](../../../core/wse/license/wse_LicenceAdmin.cpp), [license contract](../../../test/characterization/license_contract.cpp) |
 | Device queries | [Portable Core](PortableCore.md) | Platform adapters and Linux runtime-contract branch |
 
@@ -92,9 +93,13 @@ See [Thread Ownership](ThreadOwnership.md) for the shared worker and component e
 
 ## Log record construction and dispatch: CORE-SVC-03
 
-Logging is synchronous on the thread that writes the record. Registry/configuration data
+The existing `Logger<Tag>` and `writeLog()` paths are synchronous on the thread that writes the record. Registry/configuration data
 uses a state mutex; console/file output uses a separate output mutex. Custom sinks are called
 outside both. There is no implicit logging worker, delivery queue or backpressure buffer.
+
+Applications may explicitly create the separate [asynchronous logging runtime](AsyncLogging.md).
+That runtime owns its finite queue, writer, filters and output lifecycle. It does not change
+the synchronous entry points, global registry or existing `flushLog()` semantics.
 
 ```text
 writeLog(level, tag, source, message, details)
@@ -219,5 +224,6 @@ and requires corresponding API/design/test review.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-05 | Distinguish existing synchronous logging from the explicitly owned asynchronous runtime. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |
