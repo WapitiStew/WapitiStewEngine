@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-14
 
 WSE requires C++17 and CMake 3.24 or later (3.25 or later for presets). The supported build
 environments are:
@@ -63,6 +63,31 @@ The languages are `cpp`, `cs`, `java`, `js`, and `python`. The components are `x
 An explicit selection is authoritative. Only the packages that selection needs are provisioned; a
 language that needs no vendored dependency provisions nothing. Without `--language` and
 `--component`, bootstrap behaves exactly as before and prepares the default package set.
+
+### Windows Python startup
+
+`bootstrap.bat` and `doxy/RunDoxygen.bat` first look for usable CPython 3.8+ matching the Windows
+host architecture: `WSE_PYTHON_HOME`, `python`/`python3` on `PATH`, then `py -3`. If none is found,
+they use the host-specific pinned CPython runtime in `.bootstrap-cache/toolchains/`, fetching its
+verified archive when permitted. This startup requirement is separate from the Python binding's
+CPython 3.11+ requirement. Python output from the launchers is UTF-8; tools that capture it should
+decode UTF-8 explicitly, including on Japanese Windows with a CP932 default encoding.
+
+For `bootstrap.bat`, `--cache-dir` also relocates this runtime cache. `--offline` and
+`--no-fetch-toolchain` prohibit runtime downloads, while `--check` and `--verify-cache` do not
+install a runtime. Supply an installed interpreter or an already prepared runtime for these
+checks. An offline provisioning run can use the verified runtime archive from the selected cache.
+These options belong to bootstrap; other Python entry points keep their own argument meanings.
+
+When fallback startup is needed, `--manifest` supplies the CPython pin if it contains one. A custom
+manifest that lists only dependency packages uses the repository's launch-runtime pin; its package
+selection remains unchanged.
+
+Python startup precedes dependency resolution and Doxygen execution. Previously, the Windows
+launchers could fail while fetching or preparing their local pinned runtime even when usable
+system Python was installed. If startup fails, check the selected Python and runtime cache first;
+that failure does not establish a missing dependency or a Doxygen error. Downloads are verified
+against the pinned digest before being promoted from a unique temporary file into the cache.
 
 ### Verification toolchains
 
@@ -590,5 +615,6 @@ wants the old spelling defines its own local alias over `WSE::Core`.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-14 | Explain Windows installed-Python detection, UTF-8 capture, and offline/cache-safe launcher startup. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

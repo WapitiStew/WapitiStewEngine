@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-14
 
 ## Selection and content
 
@@ -60,9 +60,15 @@ controlled profiles select the two explicit source sets and keep all output outs
 ## Verification and output configuration
 
 Doxygen 1.13.2+ is required and full generation requires Graphviz. Tool provisioning remains an
-explicit separate step for Doxygen and Graphviz. Windows batch entries reuse the pinned-Python
-bootstrap launcher, which can provision its verified cache when missing. Offline use requires that
-cache to be prepared, or the Python/shell entry with an existing interpreter. Both a successful exit status and an empty document-warning log are required.
+explicit separate step for Doxygen and Graphviz. Windows batch entries reuse the Python bootstrap
+launcher, which first detects usable host-native CPython 3.8+ through `WSE_PYTHON_HOME`,
+`python`/`python3` on `PATH`, and `py -3`. A suitable installed interpreter takes precedence over
+the verified pinned runtime in the bootstrap cache; the launcher can provision that fallback when
+needed. Offline startup uses a suitable installed interpreter or a prepared host-specific cache.
+Python output uses UTF-8, including redirected output, so capture tools must decode UTF-8 explicitly.
+The documentation runner retains its own flag meanings: its `--check` selects Doxygen XML verification
+and is not the bootstrap prerequisite check. Both a successful exit status and an empty
+document-warning log are required.
 Regression tests verify the four-way input matrix, disjoint output paths, restricted-source rejection,
 User source-listing suppression, language selection, and failure propagation. Public CI generates
 User and Developer editions in both languages. Overlay verification also exercises both controlled
@@ -140,5 +146,6 @@ unresolved `.md` URLs, and verify fragments in the generated target page.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-14 | Synchronize Windows documentation startup with installed-first host-native Python detection and UTF-8 output. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

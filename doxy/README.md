@@ -2,9 +2,10 @@
 
 One runner combines an audience profile with the shared Doxyfile, language settings, layout and style.
 Doxygen 1.13.2+ and Python 3.8+ are required; full generation also needs Graphviz `dot` on PATH.
-Install Doxygen and Graphviz separately. Windows batch entries use the existing pinned-Python
-launcher, which provisions its verified runtime in the bootstrap cache when missing. For an offline
-run, prepare that cache first or invoke the Python runner with an existing interpreter.
+Install Doxygen and Graphviz separately. Windows batch entries first use host-native CPython 3.8+
+from `WSE_PYTHON_HOME`, `PATH`, or `py -3`, then a verified pinned runtime in the bootstrap cache.
+For an offline run, provide an installed interpreter or prepare that runtime cache first.
+Launcher output uses UTF-8, including when captured on Japanese Windows.
 
 | Edition | Profile | Windows entry | Linux/macOS shell entry |
 | --- | --- | --- | --- |
@@ -58,8 +59,9 @@ UserはAPI Headerと短い入口ページ、DeveloperはAPI・Core・Platformと
 出力は`doxy/generated/<audience>-<visibility>/<full-or-check>/lang_<language>/`で、HTML入口は`html/index.html`です。
 User版の通常出力はHTML／LaTeXです。内部Symbol情報を含むXMLは`--check`の検証用出力に限定します。
 同じProfile・Modeを同時実行しないでください。警告Logが空でない場合は失敗します。
-DoxygenとGraphvizは別途準備します。Windowsのbatは既存の固定版Python起動処理を使い、
-未準備の場合は検証済みRuntimeをCacheへ取得します。OfflineではCacheを事前準備するか、既存PythonでRunnerを実行してください。
+DoxygenとGraphvizは別途準備します。Windowsのbatは`WSE_PYTHON_HOME`、`PATH`、`py -3`からHostに一致する
+CPython 3.8+を先に検出し、無ければCache内の検証済み固定版Runtimeを使います。Offlineでは既存Pythonを
+用意するかRuntime Cacheを事前準備してください。日本語Windowsでの出力取得もUTF-8です。
 詳細は上記の文書生成設計を参照してください。
 
 共通CSS変更時は生成完了後、公開両版・日英の全HTML Pageを320／375／720 CSS pxで検査します。

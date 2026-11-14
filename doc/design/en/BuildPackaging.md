@@ -2,7 +2,7 @@
 
 > Canonical language: English
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-14
 
 ## Build model
 
@@ -94,6 +94,24 @@ four bindings, including C# alone, enables `POSITION_INDEPENDENT_CODE` on the st
    compilation supplies target Python/JNI headers separately; a successful target compile cannot run
    an ARM64 module inside an x86-64 interpreter. Managed Java/C# artifacts skipped by cross build
    need separate preparation before claiming a complete language package.
+
+The Windows Python launchers apply the same installed-first rule before dependency resolution or
+documentation generation. They probe `WSE_PYTHON_HOME`, `python`/`python3` on `PATH`, and `py -3`
+for usable CPython 3.8+ matching the host architecture, then use the host-specific pinned runtime
+in the bootstrap cache. The launcher minimum does not replace the Python binding's CPython 3.11+
+requirement. A missing local pinned runtime must not force a download when a suitable installed
+interpreter is available. Python output from these launchers uses UTF-8, including redirected output.
+
+For `bootstrap.bat`, `--cache-dir` selects the launcher's cache as well as the dependency cache.
+For fallback startup, `--manifest` selects its CPython pin when present. A custom package-only
+manifest without that pin uses the repository's launch-runtime pin while retaining its own packages.
+`--offline` prohibits runtime downloads; `--no-fetch-toolchain` also prohibits fetching the launcher
+runtime. `--check` and `--verify-cache` must not install a runtime before checking the requested
+material. If no interpreter can run the requested check, report that prerequisite without fetching.
+Other Python entry points retain their own argument meanings. Runtime downloads use unique
+temporary files, verify the manifest digest before cache promotion, and clean up failed downloads.
+The selected runtime must follow the native host architecture, including Windows ARM64, rather
+than the dependency target or the bitness of the launcher process.
 
 Do not reuse one dependency/build directory across incompatible target identities. A configure error
 is not repaired by downloading from inside CMake or silently turning off a requested component.
@@ -237,6 +255,7 @@ attribution and rejection of missing or incorrectly narrowed terms.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-14 | Define installed-first Windows Python startup, UTF-8 output, and offline/cache-safe runtime fallback. |
 | 2026-10-15 | Synchronize documentation identity with WSE 1.1.0. |
 | 2026-09-21 | Added public Apache notices and explicit license metadata for public and combined packages. |
 | 2026-09-20 | Initial public baseline of the current contracts and procedures. |

@@ -37,9 +37,8 @@ if(WSE_BUILD_TESTING)
 				-s "${CMAKE_CURRENT_SOURCE_DIR}/test/bootstrap"
 				-p "test_bootstrap.py"
 		)
-		# The Windows launcher contract provisions the pinned CPython runtime on a machine that
-		# does not have it, so a cold host legitimately spends most of this budget on one
-		# download and extraction; a warm host finishes in seconds.
+		# Windows launcher fixtures use the running interpreter and intercept downloads.
+		# Cold-cache, encoding, identity and offline failures remain network-independent.
 		set_tests_properties(wse.bootstrap.contract PROPERTIES TIMEOUT 300)
 		if(WSE_ENABLE_TOOLCHAIN_PIN_VERIFICATION)
 			# The default gates are offline. These reach the vendors that publish the pinned archives,

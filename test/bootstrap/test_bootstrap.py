@@ -26,6 +26,8 @@ SPEC.loader.exec_module(BOOTSTRAP)
 class StandaloneBootstrapTests(unittest.TestCase):
     @unittest.skipUnless(os.name == "nt", "Windows launcher contract")
     def test_windows_launcher_propagates_bootstrap_failure(self):
+        environment = os.environ.copy()
+        environment["WSE_PYTHON_HOME"] = sys.base_prefix
         completed = subprocess.run(
             [
                 os.environ.get("COMSPEC", "cmd.exe"),
@@ -38,6 +40,8 @@ class StandaloneBootstrapTests(unittest.TestCase):
             cwd=WSE_ROOT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            env=environment,
             check=False,
         )
 
@@ -1297,6 +1301,302 @@ class LanguageSelectionBootstrapTests(unittest.TestCase):
     def test_the_generated_preset_is_never_committed(self):
         ignored = (WSE_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
         self.assertIn("/CMakeUserPresets.json", ignored)
+
+
+@unittest.skipUnless(os.name == "nt", "Windows launcher contract")
+class WindowsPythonLauncherTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix="wse launcher 日本語 ")
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.network_marker = self.root / "network-attempt.txt"
+        launcher = self.root / "tools" / "bootstrap" / "invoke-local-python.ps1"
+        launcher.parent.mkdir(parents=True)
+        launcher_source = (WSE_ROOT / "tools" / "bootstrap" / launcher.name).read_text(encoding="utf-8-sig")
+        hook = (
+            "function global:Invoke-WebRequest {\n"
+            "    param($Uri, $OutFile)\n"
+            "    [IO.File]::WriteAllText('"
+            + str(self.network_marker).replace("'", "''")
+            + "', [string]$Uri)\n"
+            "    throw 'Network access is forbidden by the launcher contract fixture.'\n"
+            "}\n"
+        )
+        self.assertIn("Set-StrictMode -Version Latest", launcher_source)
+        launcher.write_text(
+            launcher_source.replace("Set-StrictMode -Version Latest", hook + "Set-StrictMode -Version Latest", 1),
+            encoding="utf-8-sig",
+        )
+        shutil.copyfile(WSE_ROOT / "bootstrap.bat", self.root / "bootstrap.bat")
+        manifest = json.loads((WSE_ROOT / "bootstrap-manifest.json").read_text(encoding="utf-8"))
+        cpython = next(tool for tool in manifest["toolchains"] if tool["name"] == "cpython")
+        for runtime in cpython["platforms"]["windows"]["architectures"].values():
+            runtime["url"] = "https://invalid.example/wse-test-runtime.zip"
+        (self.root / "bootstrap-manifest.json").write_text(
+            json.dumps({"toolchains": [cpython]}), encoding="utf-8"
+        )
+        self.script = self.root / "bootstrap.py"
+        self.script.write_text(
+            "import json, sys\n"
+            "from pathlib import Path\n"
+            "Path(__file__).with_suffix('.result.json').write_text(\n"
+            "    json.dumps(sys.argv[1:], ensure_ascii=False), encoding='utf-8')\n"
+            "print('出力 café')\n"
+            "print('診断 résumé', file=sys.stderr)\n"
+            "raise SystemExit(23)\n",
+            encoding="utf-8",
+        )
+        documentation_dir = self.root / "doxy"
+        documentation_dir.mkdir()
+        shutil.copyfile(WSE_ROOT / "doxy" / "RunDoxygen.bat", documentation_dir / "RunDoxygen.bat")
+        shutil.copyfile(self.script, documentation_dir / "RunDoxygen.py")
+        self.powershell = (
+            Path(os.environ["SystemRoot"])
+            / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+        )
+
+    def run_launcher(self, arguments, *, installed_python=True, search_path="", script=None,
+                     python_home=None, probe_identity=None):
+        target = script or self.script
+        launcher = self.root / "tools" / "bootstrap" / "invoke-local-python.ps1"
+
+        def literal(value):
+            return "'" + str(value).replace("'", "''") + "'"
+
+        # This function is inherited by the invoked launcher. Even a regression that tries to
+        # download a runtime stays offline and leaves evidence that the attempt occurred.
+        command_override = ""
+        if probe_identity is not None:
+            shim = self.root / "probe-python.cmd"
+            identity = dict(probe_identity, executable=str(shim))
+            shim.write_text("@echo off\necho " + json.dumps(identity) + "\nexit /b 0\n", encoding="ascii")
+            command_override = (
+                "function global:Get-Command {\n"
+                "    param($Name, $CommandType, [switch]$All, $ErrorAction)\n"
+                "    if ($Name -eq 'python.exe') {\n"
+                f"        [pscustomobject]@{{ Source = {literal(shim)} }}\n"
+                "    }\n"
+                "}\n"
+            )
+        harness = self.root / "launch-fixture.ps1"
+        arguments_file = self.root / "arguments.json"
+        arguments_file.write_text(json.dumps(arguments), encoding="utf-8")
+        harness.write_text(
+            f"$ForwardedArguments = Get-Content -LiteralPath {literal(arguments_file)} "
+            "-Raw -Encoding UTF8 | ConvertFrom-Json\n"
+            "function global:Invoke-WebRequest {\n"
+            "    param($Uri, $OutFile)\n"
+            f"    [IO.File]::WriteAllText({literal(self.network_marker)}, [string]$Uri)\n"
+            "    throw 'Network access is forbidden by the launcher contract fixture.'\n"
+            "}\n"
+            + command_override
+            + f"& {literal(launcher)} -ScriptPath {literal(target)} @ForwardedArguments\n"
+            "exit $LASTEXITCODE\n",
+            encoding="utf-8-sig",
+        )
+        environment = os.environ.copy()
+        environment.pop("WSE_PYTHON_HOME", None)
+        environment["PATH"] = search_path
+        if installed_python:
+            environment["WSE_PYTHON_HOME"] = str(python_home or sys.base_prefix)
+        return subprocess.run(
+            [str(self.powershell), "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+             str(harness)],
+            cwd=self.root,
+            env=environment,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+            timeout=30,
+        )
+
+    def assert_script_ran(self, completed, arguments, *, script=None):
+        self.assertEqual(completed.returncode, 23, completed.stdout + completed.stderr)
+        self.assertEqual(
+            json.loads((script or self.script).with_suffix(".result.json").read_text(encoding="utf-8")),
+            arguments,
+        )
+        self.assertIn("出力 café", completed.stdout)
+        self.assertIn("診断 résumé", completed.stderr)
+        self.assertFalse(self.network_marker.exists())
+        self.assertFalse((self.root / ".bootstrap-cache").exists())
+
+    def test_installed_python_preserves_unicode_arguments_output_and_failure(self):
+        cache = self.root / "選択 cache"
+        arguments = ["--cache-dir", str(cache) + "\\", "--offline", "引数", "two words",
+                     "--name=値", "", 'literal"quote', "C:\\cache with space\\"]
+        completed = self.run_launcher(arguments)
+        self.assert_script_ran(completed, arguments)
+        self.assertFalse(cache.exists())
+
+    def test_batch_cmd_syntax_preserves_trailing_slash_next_flag_empty_and_literal_quote(self):
+        cache = self.root / "選択 cache"
+        comspec = os.environ.get("COMSPEC", str(Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"))
+        # cmd.exe treats a backslash before the closing quote as a path separator. Pass this
+        # raw command line unchanged: subprocess.list2cmdline would apply different CRT rules.
+        raw_arguments = f'--cache-dir "{cache}\\" --offline "" "literal""quote"'
+        environment = os.environ.copy()
+        environment["WSE_PYTHON_HOME"] = sys.base_prefix
+        environment["PATH"] = str(self.powershell.parent)
+        environment.pop("WSE_GRAPHVIZ_BIN", None)
+        for batch, script in (
+            (self.root / "bootstrap.bat", self.script),
+            (self.root / "doxy" / "RunDoxygen.bat", self.root / "doxy" / "RunDoxygen.py"),
+        ):
+            with self.subTest(batch=batch.name):
+                command = f'"{comspec}" /d /s /c ""{batch}" {raw_arguments}"'
+                completed = subprocess.run(
+                    command,
+                    cwd=self.root,
+                    env=environment,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    check=False,
+                    timeout=30,
+                )
+                self.assert_script_ran(
+                    completed, ["--cache-dir", str(cache) + "\\", "--offline", "", 'literal"quote'],
+                    script=script,
+                )
+                self.assertFalse(cache.exists())
+
+    def test_path_python_is_detected_before_fetching_a_runtime(self):
+        arguments = ["--offline", "PATH の Python"]
+        completed = self.run_launcher(
+            arguments, installed_python=False, search_path=str(Path(sys.executable).parent)
+        )
+        self.assert_script_ran(completed, arguments)
+
+    def test_invalid_explicit_python_falls_back_to_a_usable_path_python(self):
+        invalid_home = self.root / "invalid python"
+        invalid_home.mkdir()
+        (invalid_home / "python.exe").write_bytes(b"not an executable")
+        arguments = ["--offline"]
+        completed = self.run_launcher(
+            arguments, python_home=invalid_home, search_path=str(Path(sys.executable).parent)
+        )
+        self.assert_script_ran(completed, arguments)
+
+    def test_cold_offline_check_and_no_fetch_leave_both_caches_untouched(self):
+        for mode in ("--offline", "--check", "--verify-cache", "--no-fetch-toolchain"):
+            for equals_form in (False, True):
+                with self.subTest(mode=mode, equals_form=equals_form):
+                    cache = self.root / f"選択 cache {mode[2:]} {equals_form}"
+                    cache_option = ([f"--cache-dir={cache}"] if equals_form
+                                    else ["--cache-dir", str(cache)])
+                    completed = self.run_launcher(
+                        [mode, *cache_option], installed_python=False
+                    )
+                    self.assertNotEqual(completed.returncode, 0)
+                    diagnostic = completed.stdout + completed.stderr
+                    self.assertIn("Python", diagnostic)
+                    self.assertIn("WSE_PYTHON_HOME", diagnostic)
+                    self.assertFalse(self.network_marker.exists(), diagnostic)
+                    self.assertFalse(cache.exists(), diagnostic)
+                    self.assertFalse((self.root / ".bootstrap-cache").exists(), diagnostic)
+                    self.assertFalse(self.script.with_suffix(".result.json").exists())
+
+    def test_old_non_cpython_and_wrong_host_architecture_are_rejected(self):
+        architecture = (os.environ.get("PROCESSOR_ARCHITEW6432")
+                        or os.environ.get("PROCESSOR_ARCHITECTURE", "")).lower()
+        host_platform = "win-arm64" if architecture == "arm64" else "win-amd64"
+        other_platform = "win-amd64" if host_platform == "win-arm64" else "win-arm64"
+        for version, platform, implementation in (
+            ([3, 7, 9], host_platform, "cpython"),
+            ([3, 13, 1], "win32", "cpython"),
+            ([3, 13, 1], other_platform, "cpython"),
+            ([3, 13, 1], host_platform, "pypy"),
+        ):
+            with self.subTest(version=version, platform=platform, implementation=implementation):
+                completed = self.run_launcher(
+                    ["--offline"], installed_python=False,
+                    probe_identity={"version": version, "platform": platform,
+                                    "implementation": implementation},
+                )
+                diagnostic = completed.stdout + completed.stderr
+                self.assertNotEqual(completed.returncode, 0, diagnostic)
+                self.assertIn("No usable Python 3.8+", diagnostic)
+                self.assertFalse(self.network_marker.exists(), diagnostic)
+                self.assertFalse((self.root / ".bootstrap-cache").exists(), diagnostic)
+                self.assertFalse(self.script.with_suffix(".result.json").exists())
+
+    def test_cached_archive_digest_is_checked_with_the_selected_cache_and_manifest(self):
+        manifest = json.loads((self.root / "bootstrap-manifest.json").read_text(encoding="utf-8"))
+        for runtime in manifest["toolchains"][0]["platforms"]["windows"]["architectures"].values():
+            runtime["archive_name"] = "selected-runtime.zip"
+        selected_manifest = self.root / "選択 manifest.json"
+        selected_manifest.write_text(json.dumps(manifest), encoding="utf-8")
+        cache = self.root / "選択 cache"
+        cache.mkdir()
+        archive = cache / "selected-runtime.zip"
+        archive.write_bytes(b"not the pinned archive")
+        for mode in ("--offline", "--no-fetch-toolchain"):
+            with self.subTest(mode=mode):
+                completed = self.run_launcher(
+                    [mode, "--cache-dir", str(cache.relative_to(self.root)),
+                     "--manifest", str(selected_manifest)],
+                    installed_python=False,
+                )
+                diagnostic = completed.stdout + completed.stderr
+                self.assertNotEqual(completed.returncode, 0, diagnostic)
+                self.assertIn("SHA-512", diagnostic)
+                self.assertEqual(archive.read_bytes(), b"not the pinned archive")
+                self.assertFalse(self.network_marker.exists(), diagnostic)
+                self.assertFalse((self.root / ".bootstrap-cache").exists(), diagnostic)
+                self.assertFalse(self.script.with_suffix(".result.json").exists())
+
+    def test_check_and_verify_cache_do_not_extract_a_cached_archive(self):
+        manifest = json.loads((self.root / "bootstrap-manifest.json").read_text(encoding="utf-8"))
+        cache = self.root / "選択 cache"
+        cache.mkdir()
+        archive_names = {runtime["archive_name"] for runtime in
+                         manifest["toolchains"][0]["platforms"]["windows"]["architectures"].values()}
+        for name in archive_names:
+            (cache / name).write_bytes(b"cached archive must remain untouched")
+        before = {path.name: path.read_bytes() for path in cache.iterdir()}
+        for mode in ("--check", "--verify-cache"):
+            with self.subTest(mode=mode):
+                completed = self.run_launcher(
+                    [mode, "--cache-dir", str(cache)], installed_python=False
+                )
+                diagnostic = completed.stdout + completed.stderr
+                self.assertNotEqual(completed.returncode, 0, diagnostic)
+                self.assertEqual({path.name: path.read_bytes() for path in cache.iterdir()}, before)
+                self.assertFalse(self.network_marker.exists(), diagnostic)
+                self.assertFalse((self.root / ".bootstrap-cache").exists(), diagnostic)
+                self.assertFalse(self.script.with_suffix(".result.json").exists())
+
+    def test_package_only_manifest_keeps_the_repository_python_pin(self):
+        selected_manifest = self.root / "package-only manifest.json"
+        selected_manifest.write_text(
+            json.dumps({"schema_version": 2, "packages": []}), encoding="utf-8"
+        )
+        manifest = json.loads((self.root / "bootstrap-manifest.json").read_text(encoding="utf-8"))
+        cache = self.root / "選択 cache"
+        cache.mkdir()
+        archive_names = {runtime["archive_name"] for runtime in
+                         manifest["toolchains"][0]["platforms"]["windows"]["architectures"].values()}
+        for name in archive_names:
+            (cache / name).write_bytes(b"not the repository's pinned archive")
+        completed = self.run_launcher(
+            ["--offline", "--cache-dir", str(cache), "--manifest", str(selected_manifest)],
+            installed_python=False,
+        )
+        diagnostic = completed.stdout + completed.stderr
+        self.assertNotEqual(completed.returncode, 0, diagnostic)
+        self.assertIn("SHA-512", diagnostic)
+        self.assertFalse(self.network_marker.exists(), diagnostic)
+        self.assertFalse((self.root / ".bootstrap-cache").exists(), diagnostic)
+        self.assertFalse(self.script.with_suffix(".result.json").exists())
+
+    def test_other_python_entrypoints_preserve_bootstrap_named_arguments(self):
+        documentation_script = self.root / "documentation.py"
+        shutil.copyfile(self.script, documentation_script)
+        arguments = ["--check", "--cache-dir", "任意 cache", "--no-fetch-toolchain", "--offline"]
+        completed = self.run_launcher(arguments, script=documentation_script)
+        self.assert_script_ran(completed, arguments, script=documentation_script)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 > Canonical source: [English Documentation Generation](../en/DocumentationGeneration.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-14
 
 ## 対象者と内容
 
@@ -55,8 +55,12 @@ Controlled生成物はすべてSDKの外に保持します。
 ## 検証と出力設定
 
 Doxygen 1.13.2以降を要求し、通常生成にはGraphvizも必要です。DoxygenとGraphvizの準備は明示的な別Stepです。
-Windowsのbatは固定版PythonのBootstrap起動処理を再利用し、未準備の検証済みCacheを取得する場合があります。
-OfflineではCacheを事前準備するか、既存の処理系からPython／Shell入口を使用します。
+WindowsのbatはPythonのBootstrap起動処理を再利用し、まず`WSE_PYTHON_HOME`、`PATH`上の`python`／`python3`、
+`py -3`から実行可能なHost NativeのCPython 3.8以上を検出します。適切な導入済みInterpreterを、
+Bootstrap cache内の検証済み固定Runtimeより優先し、必要な場合だけFallback用Runtimeを準備します。
+Offline起動には適切な導入済みInterpreterまたは準備済みのHost別Cacheを使います。Python出力はRedirect時も
+UTF-8のため、取得するToolはUTF-8を明示してDecodeします。文書RunnerのFlagは固有の意味を維持し、
+`--check`はDoxygenのXML検証を選択します。BootstrapのPrerequisite検査とは別です。
 Process成功と文書警告Logが空であることの両方を必要とします。回帰Testは4条件の入力、出力分離、
 制御対象Sourceの誤選択拒否、User版のSource非表示、言語選択および失敗伝播を検査します。
 公開CIはUser／Developerの日英を生成します。Overlay側でもConfidentialの両Profileを検証し、
@@ -122,5 +126,6 @@ Pathとして表示します。この処理でSource入力を追加・Copy・公
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-14 | Windows文書起動を、導入済みHost Native Python優先検出とUTF-8出力へ同期。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

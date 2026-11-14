@@ -27,8 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The bootstrap launcher contract provisions the pinned CPython runtime on a machine
-      # without one; caching it keeps that single download from repeating every run.
+      # Reuse separately provisioned bootstrap tools when present. Launcher contracts use
+      # the installed interpreter and offline fixtures; the Core gate needs no download.
       - name: Cache the pinned bootstrap toolchain
         uses: actions/cache@v4
         with:

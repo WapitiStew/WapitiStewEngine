@@ -2,7 +2,7 @@
 
 > Canonical source: [English Build and Install Guide](../en/BuildGuide.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-14
 
 ## Compilerと文書の品質Gate
 
@@ -59,6 +59,28 @@ Componentは必要なComponentを含意し、`CMakeLists.txt`の自動有効化�
 明示的な選択が優先されます。選択が必要とするPackageのみを準備し、Vendor Dependencyを必要としない言語
 では何も準備しません。`--language`と`--component`を指定しない場合の動作は従来どおりで、既定Package
 一式を準備します。
+
+### WindowsでのPython起動
+
+`bootstrap.bat`と`doxy/RunDoxygen.bat`は、Windows HostのArchitectureと一致する実行可能なCPython 3.8以上を、
+`WSE_PYTHON_HOME`、`PATH`上の`python`／`python3`、`py -3`の順に検出します。見つからなければ、
+`.bootstrap-cache/toolchains/`内のHost別固定CPython Runtimeを使い、取得が許可されていれば検証済みArchiveから
+準備します。この起動要件とPython BindingのCPython 3.11以上という要件は別です。起動したPythonの出力は
+UTF-8です。出力を取得するToolは、既定EncodingがCP932の日本語WindowsでもUTF-8を明示してDecodeしてください。
+
+`bootstrap.bat`では`--cache-dir`が起動用RuntimeのCache先も変更します。`--offline`と
+`--no-fetch-toolchain`はRuntimeのDownloadを禁止し、`--check`と`--verify-cache`はRuntimeをInstallしません。
+検査時には導入済みInterpreterまたは準備済みRuntimeを用意してください。OfflineでProvisioningする場合は、
+選択したCache内の検証済みRuntime Archiveを使用できます。これらはBootstrapのOptionであり、他のPython入口は
+各Script固有の引数の意味を保持します。
+
+Fallback起動が必要な場合、`--manifest`で選んだManifestにCPython pinがあれば使用します。依存Packageのみを
+記載したCustom Manifestは、依存Packageの選択を保持し、起動用にはRepositoryのRuntime pinを使います。
+
+Python起動は依存解決やDoxygen実行より先です。従来のWindows起動Fileは、利用可能なSystem Pythonが存在しても、
+Local固定Runtimeの取得・準備中に失敗する場合がありました。起動に失敗した場合は選択されたPythonとRuntime
+Cacheを先に確認してください。この失敗だけで依存不足やDoxygenのErrorとは判断できません。Downloadは一意な
+一時Fileへ行い、固定Digestを検証してからCacheへ確定します。
 
 ### 検証用Toolchain
 
@@ -607,5 +629,6 @@ Legacy削除Programにより2026-09-13に削除しました。旧名が必要な
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-14 | Windowsの導入済みPython検出、UTF-8出力取得、Offline／Cacheを守る起動手順を説明。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |

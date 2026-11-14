@@ -2,7 +2,7 @@
 
 > Canonical source: [English Build and Packaging Design](../en/BuildPackaging.md)
 > Documentation version: WSE 1.1.0
-> Last synchronized: 2026-10-15
+> Last synchronized: 2026-11-14
 
 ## Build model
 
@@ -88,6 +88,23 @@ C#単独を含む4 Bindingのいずれかを選ぶと、Static Engine targetの`
 5. ConfigureはLocal入力だけを使い、Build／CTestは選択Runtimeを使います。Cross buildではTarget用Python／JNI
    Headerを別途供給します。ARM64 Compile成功でもx86-64 InterpreterからModuleは実行できません。
    Cross buildで生成を省略したJava／C# Managed Artifactは、言語Package完成とする前に別途用意します。
+
+WindowsのPython起動Fileも、依存解決や文書生成を始める前に導入済みInterpreterを優先します。
+`WSE_PYTHON_HOME`、`PATH`上の`python`／`python3`、`py -3`の順に、Host Architectureと一致する
+実行可能なCPython 3.8以上を検出し、無ければBootstrap cache内のHost別固定Runtimeを使います。
+起動用の最小Versionと、Python Bindingが要求するCPython 3.11以上は別です。適切な導入済みInterpreterが
+存在する場合、Local固定Runtimeの欠落を理由にDownloadしてはいけません。起動したPythonの出力は、
+Redirect時も含めUTF-8を使います。
+
+`bootstrap.bat`の`--cache-dir`は、依存Cacheと起動用RuntimeのCacheの両方を選択します。
+Fallback起動時は`--manifest`で選んだManifestのCPython pinを使います。CPython pinを持たないPackage専用の
+Custom Manifestでは、依存Packageの選択を保持したまま、Repositoryの起動用Runtime pinを使います。
+`--offline`はRuntimeのDownloadを禁止し、`--no-fetch-toolchain`も起動用Runtimeの取得を禁止します。
+`--check`と`--verify-cache`は、要求されたMaterialの検査に先立ってRuntimeをInstallしてはいけません。
+検査を実行できるInterpreterがなければ、取得せずに不足Prerequisiteを報告します。他のPython入口では、
+そのScript固有の引数の意味を保持します。RuntimeのDownloadには一意な一時Fileを使い、ManifestのDigestを
+検証してからCacheへ確定し、失敗したDownloadの一時Fileを除去します。Runtimeは依存Targetや起動Processの
+Bit数ではなく、Windows ARM64を含むNative Host Architectureに合わせて選択します。
 
 互換性のないTarget間で依存・Build Directoryを再利用しません。Configure失敗をCMake内Downloadや
 要求Componentの黙示無効化で回避しません。依存ArchiveはLinkを拒否し、Toolchain Archiveは検証済みの
@@ -222,6 +239,7 @@ ExtensionへのApache許諾を意味しません。Extensionの識別子と条�
 
 | 日付 | 変更内容 |
 | --- | --- |
+| 2026-11-14 | Windowsの導入済みPython優先起動、UTF-8出力、Offline／Cacheを守るRuntime fallbackを規定。 |
 | 2026-10-15 | 文書のVersion表記をWSE 1.1.0へ同期。 |
 | 2026-09-21 | 公開SDKのApache表示と、公開・併用Packageの明示的なLicense metadataを追加した。 |
 | 2026-09-20 | 公開初版の仕様と手順を記載。 |
