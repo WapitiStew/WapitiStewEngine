@@ -52,6 +52,10 @@ namespace wse
     typedef  int32_t   sint32_t;    //!< Signed Integer 32 bit   : -2,147,483,648 to 2,147,483,647
     typedef  int64_t   sint64_t;    //!< Signed Integer 64 bit   : -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
     typedef  int8_t    sint08_t;    //!< Signed Integer  8 bit   : -128 to 127
+    typedef uint8_t    uint8_t;     //!< Unsigned Integer  8 bit : 0 to 255
+    typedef uint16_t   uint16_t;    //!< Unsigned Integer 16 bit : 0 to 65535
+    typedef uint32_t   uint32_t;    //!< Unsigned Integer 32 bit : 0 to 4,294,967,295
+    typedef uint64_t   uint64_t;    //!< Unsigned Integer 64 bit : 0 to 18,446,744,073,709,551,615
     typedef uint8_t    uint08_t;    //!< Unsigned Integer  8 bit : 0 to 255
     typedef    float   float32_t;   //!< Floating Points 32 bit
     typedef    double  float64_t;   //!< Floating Points 64 bit
@@ -76,6 +80,10 @@ namespace wse
     typedef  int32_t   sint32_t;    //!< Signed Integer 32 bit   : -2,147,483,648 to 2,147,483,647
     typedef  int64_t   sint64_t;    //!< Signed Integer 64 bit   : -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
     typedef  int8_t    sint08_t;    //!< Signed Integer  8 bit   : -128 to 127
+    typedef uint8_t    uint8_t;     //!< Unsigned Integer  8 bit : 0 to 255
+    typedef uint16_t   uint16_t;    //!< Unsigned Integer 16 bit : 0 to 65535
+    typedef uint32_t   uint32_t;    //!< Unsigned Integer 32 bit : 0 to 4,294,967,295
+    typedef uint64_t   uint64_t;    //!< Unsigned Integer 64 bit : 0 to 18,446,744,073,709,551,615
     typedef uint8_t    uint08_t;    //!< Unsigned Integer  8 bit : 0 to 255
     typedef    float   float32_t;   //!< Floating Points 32 bit
     typedef    double  float64_t;   //!< Floating Points 64 bit
@@ -99,6 +107,10 @@ namespace wse
     typedef  int32_t   sint32_t;    //!< Signed Integer 32 bit   : -2,147,483,648 to 2,147,483,647
     typedef  int64_t   sint64_t;    //!< Signed Integer 64 bit   : -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
     typedef  int8_t    sint08_t;    //!< Signed Integer  8 bit   : -128 to 127
+    typedef uint8_t    uint8_t;     //!< Unsigned Integer  8 bit : 0 to 255
+    typedef uint16_t   uint16_t;    //!< Unsigned Integer 16 bit : 0 to 65535
+    typedef uint32_t   uint32_t;    //!< Unsigned Integer 32 bit : 0 to 4,294,967,295
+    typedef uint64_t   uint64_t;    //!< Unsigned Integer 64 bit : 0 to 18,446,744,073,709,551,615
     typedef uint8_t    uint08_t;    //!< Unsigned Integer  8 bit : 0 to 255
     typedef    float   float32_t;   //!< Floating Points 32 bit
     typedef    double  float64_t;   //!< Floating Points 64 bit
@@ -122,6 +134,10 @@ namespace wse
     typedef  int32_t   sint32_t;    //!< Signed Integer 32 bit   : -2,147,483,648 to 2,147,483,647
     typedef  int64_t   sint64_t;    //!< Signed Integer 64 bit   : -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
     typedef  int8_t    sint08_t;    //!< Signed Integer  8 bit   : -128 to 127
+    typedef uint8_t    uint8_t;     //!< Unsigned Integer  8 bit : 0 to 255
+    typedef uint16_t   uint16_t;    //!< Unsigned Integer 16 bit : 0 to 65535
+    typedef uint32_t   uint32_t;    //!< Unsigned Integer 32 bit : 0 to 4,294,967,295
+    typedef uint64_t   uint64_t;    //!< Unsigned Integer 64 bit : 0 to 18,446,744,073,709,551,615
     typedef uint8_t    uint08_t;    //!< Unsigned Integer  8 bit : 0 to 255
     typedef    float   float32_t;   //!< Floating Points 32 bit
     typedef    double  float64_t;   //!< Floating Points 64 bit
